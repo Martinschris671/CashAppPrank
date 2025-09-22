@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, user-scalable=no"
+    />
+    <title>Loading...</title>
+    <style>
+      @font-face {
+        font-family: "CashMarket";
+        font-style: normal;
+        src: url(font/CashSans-Regular.otf);
+        font-display: swap;
+      }
+      /* --- GLOBAL & RESET --- */
+      :root {
+        --cash-green: #00d54b;
+        --dark-green-bg: #1a472a;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        height: 100%;
+        width: 100%;
+        overflow: hidden;
+        font-family: "CashMarket", -apple-system, BlinkMacSystemFont, sans-serif;
+        position: relative;
+        background-color: #0d2b16; /* Dark BG for underneath everything */
+      }
+
+      /* --- 1. INITIAL LOADING SCREEN --- */
+      #loading-screen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: #50b849;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        opacity: 1;
+      }
+
+      #logo-container {
+        transform: scale(1);
+      }
+
+      #logo-container img {
+        display: block;
+        width: 250px;
+        height: 250px;
+      }
+
+      @keyframes logoShrinkEffect {
+        0%,
+        70% {
+          transform: scale(1);
+        }
+        100% {
+          transform: scale(0.85);
+        }
+      }
+
+      @keyframes screenFadeOutEffect {
+        0%,
+        70% {
+          opacity: 1;
+        }
+        100% {
+          opacity: 0;
+        }
+      }
+
+      /* --- 2. V2 SPLASH SCREEN (Initially Hidden) --- */
+      .splash-screen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        color: #ffffff;
+        z-index: 999; /* Below initial loader */
+
+        /* Initially hidden, will be shown via JS */
+        display: none;
+        flex-direction: column;
+        justify-content: space-between;
+        align-items: center;
+
+        opacity: 0; /* Start invisible for fade-in effect */
+        transition: opacity 0.8s ease-in; /* Smooth fade-in */
+
+        /* Background gradient + your GIF */
+        background-color: var(--dark-green-bg);
+        background-image: radial-gradient(
+            ellipse at center,
+            rgba(0, 0, 0, 0.1) 0%,
+            rgba(0, 0, 0, 0.8) 100%
+          ),
+          url("assets/3.gif"); /* <<<--- CHANGE THIS TO YOUR GIF FILE */
+        background-size: cover;
+        background-position: center;
+      }
+
+      .splash-screen.visible {
+        display: flex;
+        opacity: 1; /* Trigger fade-in */
+      }
+
+      .content-wrapper {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        padding: 20px;
+        font-family: "CashMarket", -apple-system, BlinkMacSystemFont, sans-serif;
+      }
+
+      .main-title {
+        font-size: clamp(3rem, 15vw, 5rem);
+        font-weight: 800;
+        text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+        letter-spacing: -2px;
+        margin-bottom: 20px;
+      }
+
+      .details-container {
+        display: flex;
+        align-items: center;
+        gap: clamp(15px, 4vw, 25px);
+        margin-top: -20px;
+      }
+
+      .version-number {
+        font-size: clamp(4rem, 20vw, 6.5rem);
+        font-weight: 900;
+        color: var(--cash-green);
+        line-height: 1;
+      }
+
+      .dev-info {
+        font-size: clamp(1.2rem, 5vw, 1.8rem);
+        font-weight: 600;
+        line-height: 1;
+      }
+
+      .footer {
+        width: 100%;
+        padding: 20px 25px 40px 25px;
+      }
+
+      #getStartedBtn {
+        width: 100%;
+        padding: 16px 20px;
+        background-color: #47b349;
+        color: white;
+        border: none;
+        border-radius: 50px;
+        font-size: clamp(1rem, 4vw, 1.2rem);
+        font-weight: bold;
+        cursor: pointer;
+        transition: transform 0.2s ease, background-color 0.2s ease;
+        font-family: "CashMarket", -apple-system, BlinkMacSystemFont, sans-serif;
+      }
+
+      #getStartedBtn:active {
+        transform: scale(0.98);
+      }
+
+      /* Fade-out class for the splash screen */
+      .splash-screen.hidden {
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.5s ease-out; /* Smooth fade-out on click */
+      }
+    </style>
+  </head>
+  <body>
+    <!-- STAGE 1: Initial Loading Screen -->
+    <div id="loading-screen">
+      <div id="logo-container">
+        <img src="icons/cashapp-svgrepo-com-1.png" alt="Loading Logo" />
+      </div>
+    </div>
+
+    <!-- STAGE 2: V2 Splash Screen -->
+    <div class="splash-screen" id="splashScreen">
+      <div class="content-wrapper">
+        <h1 class="main-title">Cash App</h1>
+        <div class="details-container">
+          <span class="version-number">V2</span>
+          <div class="dev-info">
+            <p>Clone Apks</p>
+          </div>
+        </div>
+      </div>
+      <div class="footer">
+        <button id="getStartedBtn">Get started</button>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        // --- Elements ---
+        const loadingScreen = document.getElementById("loading-screen");
+        const logoContainer = document.getElementById("logo-container");
+        const splashScreen = document.getElementById("splashScreen");
+        const getStartedBtn = document.getElementById("getStartedBtn");
+
+        // --- Configuration ---
+        const initialAnimationDuration = 5000; // 5 seconds for the initial load
+        const nextPageUrl = "authentication.html"; // <<<--- SET YOUR NEXT PAGE HERE
+        const storageKey = "hasClickedGetStarted_CashAppV2_Final"; // Unique key for this version
+
+        // --- Main Logic ---
+        const hasClickedBefore = localStorage.getItem(storageKey);
+
+        if (hasClickedBefore) {
+          // SCENARIO: RETURNING USER (ULTRA-FAST PATH)
+          // The user has clicked "Get started" before.
+          // We let the initial 5s animation play, then redirect INSTANTLY.
+
+          // Start the initial load animations
+          logoContainer.style.animation = `logoShrinkEffect ${
+            initialAnimationDuration / 1000
+          }s ease-in-out forwards`;
+          loadingScreen.style.animation = `screenFadeOutEffect ${
+            initialAnimationDuration / 1000
+          }s ease-in-out forwards`;
+
+          // Redirect after the animation is done
+          setTimeout(() => {
+            window.location.replace(nextPageUrl);
+          }, initialAnimationDuration);
+        } else {
+          // SCENARIO: FIRST-TIME USER
+          // Show the initial loading screen, then show the V2 splash screen.
+
+          // Start the initial load animations
+          logoContainer.style.animation = `logoShrinkEffect ${
+            initialAnimationDuration / 1000
+          }s ease-in-out forwards`;
+          loadingScreen.style.animation = `screenFadeOutEffect ${
+            initialAnimationDuration / 1000
+          }s ease-in-out forwards`;
+
+          // After the animation, HIDE the loader and SHOW the V2 splash screen
+          setTimeout(() => {
+            loadingScreen.style.display = "none";
+            splashScreen.classList.add("visible"); // Add class to trigger fade-in
+          }, initialAnimationDuration);
+
+          // Add the click listener for the "Get started" button
+          getStartedBtn.addEventListener("click", () => {
+            // 1. Set the flag in storage so this screen never shows again
+            localStorage.setItem(storageKey, "true");
+
+            // 2. Add a class to smoothly fade out the splash screen
+            splashScreen.classList.add("hidden");
+
+            // 3. After the fade-out, redirect to the next page
+            setTimeout(() => {
+              window.location.replace(nextPageUrl);
+            }, 500); // This 500ms should match the 'hidden' class transition time
+          });
+        }
+      });
+    </script>
+  </body>
+</html>

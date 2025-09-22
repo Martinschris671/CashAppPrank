@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ultimate Image Tester | Full Resolution Processing</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap");
+
+      :root {
+        --background-color: #f4f7f9;
+        --card-background: #ffffff;
+        --text-color: #1a202c;
+        --primary-color: #3b82f6;
+        --secondary-color: #10b981;
+        --border-color: #e2e8f0;
+        --checkerboard-light: #e2e8f0;
+        --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+          0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      }
+
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: var(--background-color);
+        color: var(--text-color);
+        margin: 0;
+        padding: 2rem;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        min-height: 100vh;
+      }
+
+      .container {
+        width: 100%;
+        max-width: 1200px;
+      }
+
+      h1 {
+        text-align: center;
+        font-size: 2.25rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+      }
+
+      h1 + p {
+        text-align: center;
+        color: #475569;
+        margin-top: 0;
+        margin-bottom: 2rem;
+      }
+
+      .upload-section {
+        background: var(--card-background);
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: var(--shadow);
+        transition: all 0.3s ease;
+      }
+
+      #drop-area {
+        border: 2px dashed var(--border-color);
+        border-radius: 8px;
+        padding: 3rem;
+        text-align: center;
+        cursor: pointer;
+        transition: border-color 0.3s ease, background-color 0.3s ease;
+      }
+
+      #drop-area.highlight {
+        border-color: var(--primary-color);
+        background-color: #eff6ff;
+      }
+
+      #drop-area p {
+        margin: 0;
+        font-size: 1.1rem;
+        font-weight: 500;
+        pointer-events: none;
+      }
+
+      #drop-area p span {
+        color: var(--primary-color);
+        font-weight: 700;
+      }
+
+      .preview-section {
+        margin-top: 2rem;
+        display: none;
+        opacity: 0;
+        transform: translateY(20px);
+        transition: opacity 0.5s ease, transform 0.5s ease;
+      }
+
+      .preview-section.visible {
+        display: block;
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      h2 {
+        font-size: 1.5rem;
+        border-bottom: 2px solid var(--border-color);
+        padding-bottom: 0.5rem;
+        margin-bottom: 1.5rem;
+      }
+
+      .preview-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 1.5rem;
+      }
+
+      .preview-card {
+        background: var(--card-background);
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: var(--shadow);
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+
+      .preview-card h3 {
+        margin-top: 0;
+        font-size: 1rem;
+        font-weight: 500;
+      }
+
+      .image-container {
+        width: 150px; /* Visual container size */
+        height: 150px; /* Visual container size */
+        margin: 0 auto 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+        overflow: hidden; /* Hide anything that spills out */
+      }
+
+      .image-container.checkerboard-bg {
+        background-image: linear-gradient(
+            45deg,
+            var(--checkerboard-light) 25%,
+            transparent 25%
+          ),
+          linear-gradient(
+            135deg,
+            var(--checkerboard-light) 25%,
+            transparent 25%
+          ),
+          linear-gradient(45deg, transparent 75%, var(--checkerboard-light) 75%),
+          linear-gradient(
+            135deg,
+            transparent 75%,
+            var(--checkerboard-light) 75%
+          );
+        background-size: 20px 20px;
+        background-position: 0 0, 10px 0, 10px -10px, 0px 10px;
+      }
+
+      /* This is key: The canvas/image will be high-res, but CSS scales it down for display */
+      .image-container img,
+      .image-container canvas {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+        image-rendering: -webkit-optimize-contrast; /* Helps keep it sharp */
+        image-rendering: crisp-edges;
+      }
+
+      .info {
+        font-size: 0.875rem;
+        color: #64748b;
+        min-height: 40px;
+      }
+
+      .controls {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 1rem;
+      }
+
+      input[type="color"] {
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        width: 40px;
+        height: 40px;
+        cursor: pointer;
+        overflow: hidden;
+      }
+
+      .download-btn {
+        background-color: var(--secondary-color);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        margin-top: 1rem;
+        transition: background-color 0.2s ease, transform 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+      }
+
+      .download-btn:hover {
+        background-color: #059669;
+        transform: translateY(-2px);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Ultimate Image Tester</h1>
+      <p>Lossless, full-resolution processing for pixel-perfect results.</p>
+
+      <div class="upload-section">
+        <input
+          type="file"
+          id="fileElem"
+          accept="image/*"
+          style="display: none"
+        />
+        <div id="drop-area">
+          <p>
+            Drag & Drop Your High-Res Image Here or <span>Click to Upload</span>
+          </p>
+        </div>
+      </div>
+
+      <div id="preview-section" class="preview-section">
+        <h2>Live Previews (Original Resolution)</h2>
+        <div class="preview-grid">
+          <!-- Original Image -->
+          <div class="preview-card">
+            <div>
+              <h3>Original</h3>
+              <div class="image-container checkerboard-bg">
+                <img id="original-img" src="" alt="Original" />
+              </div>
+              <p class="info" id="original-info"></p>
+            </div>
+          </div>
+
+          <!-- Monochrome Black -->
+          <div class="preview-card">
+            <div>
+              <h3>Monochrome (Black)</h3>
+              <div class="image-container checkerboard-bg">
+                <canvas id="mono-black-canvas"></canvas>
+              </div>
+              <p class="info">Simulates light mode icon</p>
+            </div>
+            <button
+              class="download-btn"
+              data-canvas="mono-black-canvas"
+              data-suffix="_monochrome-black"
+            >
+              Download
+            </button>
+          </div>
+
+          <!-- Monochrome White -->
+          <div
+            class="preview-card"
+            style="background-color: #1a202c; color: white"
+          >
+            <div>
+              <h3>Monochrome (White)</h3>
+              <div class="image-container checkerboard-bg">
+                <canvas id="mono-white-canvas"></canvas>
+              </div>
+              <p class="info" style="color: #94a3b8">
+                Simulates dark mode icon
+              </p>
+            </div>
+            <button
+              class="download-btn"
+              data-canvas="mono-white-canvas"
+              data-suffix="_monochrome-white"
+            >
+              Download
+            </button>
+          </div>
+
+          <!-- Custom Tint -->
+          <div class="preview-card">
+            <div>
+              <h3>Custom Tint</h3>
+              <div class="image-container checkerboard-bg">
+                <canvas id="tint-canvas"></canvas>
+              </div>
+              <div class="controls">
+                <label for="tint-color">Tint:</label>
+                <input type="color" id="tint-color" value="#3b82f6" />
+              </div>
+            </div>
+            <button
+              class="download-btn"
+              data-canvas="tint-canvas"
+              data-suffix="_custom-tint"
+            >
+              Download
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // --- DOM Elements ---
+      const dropArea = document.getElementById("drop-area");
+      const fileElem = document.getElementById("fileElem");
+      const previewSection = document.getElementById("preview-section");
+      const originalImg = document.getElementById("original-img");
+      const originalInfo = document.getElementById("original-info");
+      const tintColorInput = document.getElementById("tint-color");
+      const monoBlackCanvas = document.getElementById("mono-black-canvas");
+      const monoWhiteCanvas = document.getElementById("mono-white-canvas");
+      const tintCanvas = document.getElementById("tint-canvas");
+
+      // --- State ---
+      let currentImage = null;
+      let originalFileName = "";
+
+      // --- Event Listeners ---
+      ["dragenter", "dragover", "dragleave", "drop"].forEach((eventName) => {
+        dropArea.addEventListener(
+          eventName,
+          (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+          },
+          false
+        );
+        document.body.addEventListener(
+          eventName,
+          (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+          },
+          false
+        );
+      });
+      ["dragenter", "dragover"].forEach((eventName) =>
+        dropArea.addEventListener(
+          eventName,
+          () => dropArea.classList.add("highlight"),
+          false
+        )
+      );
+      ["dragleave", "drop"].forEach((eventName) =>
+        dropArea.addEventListener(
+          eventName,
+          () => dropArea.classList.remove("highlight"),
+          false
+        )
+      );
+
+      dropArea.addEventListener("drop", handleDrop, false);
+      dropArea.addEventListener("click", () => fileElem.click());
+      fileElem.addEventListener("change", (e) => handleFiles(e.target.files));
+
+      tintColorInput.addEventListener("input", () => {
+        if (currentImage) {
+          applyTintColor(currentImage, tintColorInput.value);
+        }
+      });
+
+      document.querySelectorAll(".download-btn").forEach((button) => {
+        button.addEventListener("click", (e) => {
+          const canvasId = e.currentTarget.dataset.canvas;
+          const suffix = e.currentTarget.dataset.suffix;
+          downloadCanvasAsImage(document.getElementById(canvasId), suffix);
+        });
+      });
+
+      // --- Core Functions ---
+      function handleDrop(e) {
+        handleFiles(e.dataTransfer.files);
+      }
+
+      function handleFiles(files) {
+        const file = files[0];
+        if (!file || !file.type.startsWith("image/")) {
+          alert("Please upload a valid image file.");
+          return;
+        }
+
+        originalFileName =
+          file.name.split(".").slice(0, -1).join(".") || "download";
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onload = () => {
+            currentImage = img;
+            displayOriginalImage(img, file);
+            renderAllCanvases(img);
+            previewSection.classList.add("visible");
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+
+      function renderAllCanvases(img) {
+        const { naturalWidth, naturalHeight } = img;
+
+        // CRITICAL STEP: Set all canvases to the image's native resolution.
+        [monoBlackCanvas, monoWhiteCanvas, tintCanvas].forEach((canvas) => {
+          canvas.width = naturalWidth;
+          canvas.height = naturalHeight;
+        });
+
+        // Now apply the image processing at full resolution.
+        applyMonochrome(img, "black");
+        applyMonochrome(img, "white");
+        applyTintColor(img, tintColorInput.value);
+      }
+
+      function displayOriginalImage(img, file) {
+        originalImg.src = img.src;
+        originalInfo.textContent = ` ${img.naturalWidth} x ${
+          img.naturalHeight
+        }px | ${(file.size / 1024).toFixed(2)} KB`;
+      }
+
+      function processImage(img, canvas, colorizeFn) {
+        const ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        // Draw image at its full, native size onto the correctly-sized canvas.
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        colorizeFn(imageData.data);
+        ctx.putImageData(imageData, 0, 0);
+      }
+
+      function applyMonochrome(img, color) {
+        const canvas = color === "black" ? monoBlackCanvas : monoWhiteCanvas;
+        const [r, g, b] = color === "black" ? [0, 0, 0] : [255, 255, 255];
+        processImage(img, canvas, (data) => {
+          for (let i = 0; i < data.length; i += 4) {
+            if (data[i + 3] > 0) {
+              // Only color non-transparent pixels
+              data[i] = r;
+              data[i + 1] = g;
+              data[i + 2] = b;
+            }
+          }
+        });
+      }
+
+      function applyTintColor(img, hexColor) {
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(
+          hexColor
+        );
+        if (!result) return;
+        const r = parseInt(result[1], 16),
+          g = parseInt(result[2], 16),
+          b = parseInt(result[3], 16);
+        processImage(img, tintCanvas, (data) => {
+          for (let i = 0; i < data.length; i += 4) {
+            if (data[i + 3] > 0) {
+              // Only color non-transparent pixels
+              data[i] = r;
+              data[i + 1] = g;
+              data[i + 2] = b;
+            }
+          }
+        });
+      }
+
+      function downloadCanvasAsImage(canvas, suffix) {
+        const link = document.createElement("a");
+        link.download = `${originalFileName}${suffix}.png`;
+        link.href = canvas.toDataURL("image/png"); // Preserves transparency
+        link.click();
+      }
+    </script>
+  </body>
+</html>

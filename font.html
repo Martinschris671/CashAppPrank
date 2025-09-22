@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SVG Icon Implementation</title>
+    <style>
+      /* Provided styles - UNCHANGED */
+      .quick-action-icon.green {
+        background-color: transparent;
+        color: #000;
+        border: 1px solid #000;
+      }
+
+      .quick-action-icon.green i {
+        font-size: 30px;
+      }
+
+      /* --- Helper styles for demonstration --- */
+      body {
+        font-family: sans-serif;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+      }
+      .quick-action {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+      }
+      .quick-action-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 8px;
+      }
+      .quick-action-label {
+        font-size: 14px;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- The HTML with the SVG implemented -->
+    <div class="quick-action">
+      <div class="quick-action-icon green">
+        <!-- Font Awesome icon has been replaced with this inline SVG -->
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="32px"
+          height="32px"
+          viewBox="0 0 100 100"
+          aria-hidden="true"
+          role="img"
+        >
+          <path
+            d="M 15 50 L 85 50 M 50 15 L 50 85"
+            fill="none"
+            stroke="black"
+            stroke-width="12"
+            stroke-linecap="butt"
+          />
+        </svg>
+      </div>
+      <span class="quick-action-label">Get $5</span>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>Payment Result - Cash App</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+      integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    <script src="guard.js"></script>
+    <!-- Anti-Flicker Dark Mode Script -->
+    <script>
+      (function () {
+        let theme =
+          window.localStorage.getItem("app-theme-preference") || "system";
+        if (theme === "system") {
+          theme = window.matchMedia("(prefers-color-scheme: dark)").matches
+            ? "dark"
+            : "light";
+        }
+        document.documentElement.setAttribute("data-theme", theme);
+      })();
+    </script>
+    <style>
+      @font-face {
+        font-family: "CashMarket";
+        font-style: normal;
+        src: url(font/CashSans-Regular.otf);
+        font-display: swap;
+      }
+      /* --- LIGHT MODE THEME (DEFAULT) --- */
+      :root {
+        --padding-screen: 24px;
+        --app-bg-color: #ffffff;
+        --text-primary: #000000;
+        --text-secondary: #6c757d;
+        --accent-green: #00d54b; /* Brighter Green */
+        --accent-red: #ff3b30;
+        --font-family: "CashMarket", -apple-system, BlinkMacSystemFont,
+          sans-serif;
+        --action-sheet-bg: #f0f0f0;
+        --action-sheet-item-bg: #ffffff;
+        --action-sheet-divider: #dcdcdc;
+        --action-sheet-text: #000000; /* CHANGED TO BLACK */
+        --status-icon: #ffffff;
+      }
+
+      /* --- DARK MODE THEME --- */
+      [data-theme="dark"] {
+        --app-bg-color: #000000;
+        --text-primary: #ffffff;
+        --text-secondary: #8e8e93;
+        --action-sheet-bg: #000000;
+        --action-sheet-item-bg: #1c1c1e;
+        --action-sheet-divider: #3a3a3c;
+        --action-sheet-text: #ffffff; /* CHANGED TO WHITE */
+        --status-icon: #000;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+      }
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        font-family: var(--font-family);
+        background-color: var(--app-bg-color);
+        color: var(--text-primary);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        transition: background-color 0.3s, color 0.3s;
+      }
+      a {
+        text-decoration: none;
+        color: inherit;
+      }
+      .result-container {
+        max-width: 450px;
+        width: 100%;
+        height: 100%;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+      }
+      .result-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px;
+        height: 65px;
+      }
+      .close-btn {
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+        color: var(--text-primary);
+      }
+      .menu-btn {
+        background: none;
+        border: none;
+        font-size: 20px;
+        color: transparent;
+        cursor: pointer;
+        padding: 8px;
+        opacity: 1;
+      }
+      .result-content {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: flex-start;
+        padding: 0px var(--padding-screen) 0;
+      }
+      .status-icon {
+        width: 54px;
+        height: 54px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        margin-bottom: 24px;
+        animation: pop-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+      }
+      @keyframes pop-in {
+        from {
+          transform: scale(0.5);
+          opacity: 0;
+        }
+        to {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+      .status-icon i,
+      .status-icon svg {
+        color: var(--status-icon);
+        width: 28px;
+        height: 28px;
+      }
+      .status-icon.success {
+        background-color: var(--accent-green);
+      }
+      .status-icon.pending {
+        background-color: var(--accent-red);
+      }
+      .result-title {
+        font-size: 24px;
+        font-weight: 900;
+        line-height: 1.3;
+      }
+      .result-details {
+        font-size: 16px;
+        color: var(--text-secondary);
+        line-height: 1.5;
+        margin-top: 16px;
+        max-width: 320px;
+      }
+      .result-details p {
+        margin-bottom: 1em;
+      }
+      .result-details p:last-child {
+        margin-bottom: 0;
+      }
+      .result-footer {
+        padding: 0 var(--padding-screen) 40px;
+      }
+      .done-btn {
+        width: 100%;
+        padding: 14px;
+        background-color: #000;
+        color: white;
+        border: none;
+        border-radius: 28px;
+        font-size: 18px;
+        font-weight: 600;
+        cursor: pointer;
+        transform: translateY(20px);
+        font-family: var(--font-family);
+      }
+      [data-theme="dark"] .done-btn {
+        background-color: var(--accent-green);
+        color: #000000;
+      }
+
+      /* --- START: Redesigned Action Sheet Styles --- */
+      .action-sheet-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 5000;
+        background-color: rgba(0, 0, 0, 0.4);
+        display: flex;
+        justify-content: center;
+        align-items: flex-end;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.3s ease, visibility 0.3s ease;
+      }
+      .action-sheet-overlay.show {
+        opacity: 1;
+        visibility: visible;
+      }
+      .action-sheet-container {
+        width: 100%;
+        max-width: 450px;
+        padding: 10px 10px 10px; /* Adjusted padding */
+        transform: translateY(100%);
+        transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        background-color: var(--action-sheet-bg); /* ADDED BACKGROUND */
+        border-top-left-radius: 14px; /* ADDED BORDER RADIUS */
+        border-top-right-radius: 14px; /* ADDED BORDER RADIUS */
+      }
+      .action-sheet-overlay.show .action-sheet-container {
+        transform: translateY(0);
+      }
+      .action-sheet-group {
+        background-color: var(--action-sheet-item-bg);
+        border-radius: 14px;
+        margin-bottom: 8px;
+        overflow: hidden;
+      }
+      .action-sheet-item {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 16px;
+        font-size: 17px;
+        font-weight: 500;
+        cursor: pointer;
+        color: var(--action-sheet-text);
+        border-bottom: 1px solid var(--action-sheet-divider);
+        transition: background-color 0.2s;
+      }
+      .action-sheet-item:last-child {
+        border-bottom: none;
+      }
+      .action-sheet-item:active {
+        background-color: var(--menu-hover);
+      }
+      .action-sheet-item i {
+        width: 22px;
+        text-align: center;
+        font-size: 18px;
+        color: var(--text-secondary);
+      }
+      .action-sheet-cancel {
+        display: block;
+        width: 100%;
+        background-color: var(--action-sheet-item-bg);
+        border-radius: 14px;
+        padding: 16px;
+        font-size: 17px;
+        font-weight: 700;
+        color: var(--action-sheet-text);
+        text-align: center;
+        border: none;
+        cursor: pointer;
+        transition: background-color 0.2s;
+      }
+      .action-sheet-cancel:active {
+        background-color: var(--menu-hover);
+      }
+      /* --- END: Redesigned Action Sheet Styles --- */
+    </style>
+  </head>
+  <body>
+    <div class="result-container">
+      <header class="result-header">
+        <a href="pay.html">
+          <svg
+            class="close-btn"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24.0 24.0"
+          >
+            <path
+              fill="currentColor"
+              d="M19.823 2.055a0.25 0.25 0 0 1 0.354 0l1.767 1.768a0.25 0.25 0 0 1 0 0.354L14.121 12l7.823 7.823a0.25 0.25 0 0 1 0 0.354l-1.767 1.767a0.25 0.25 0 0 1-0.354 0L12 14.121l-7.823 7.823a0.25 0.25 0 0 1-0.354 0l-1.768-1.767a0.25 0.25 0 0 1 0-0.354L9.88 12 2.055 4.177a0.25 0.25 0 0 1 0-0.354l1.768-1.768a0.25 0.25 0 0 1 0.354 0L12 9.88l7.823-7.824z"
+            />
+          </svg>
+        </a>
+        <button class="menu-btn" id="menu-btn">
+          <i class="fa-solid fa-ellipsis"></i>
+        </button>
+      </header>
+      <main class="result-content" id="result-content"></main>
+      <footer class="result-footer">
+        <a href="pay.html"
+          ><button class="done-btn" id="done-btn">Done</button></a
+        >
+      </footer>
+
+      <!-- START: New Action Sheet HTML Structure -->
+      <div class="action-sheet-overlay" id="action-sheet-overlay">
+        <div class="action-sheet-container" id="action-sheet">
+          <div class="action-sheet-group">
+            <div class="action-sheet-item" data-status="pending">
+              <i class="fa-solid fa-hourglass-half"></i
+              ><span>Mark as Pending</span>
+            </div>
+            <div class="action-sheet-item" data-status="success">
+              <i class="fa-solid fa-check"></i><span>Mark as Successful</span>
+            </div>
+          </div>
+          <button class="action-sheet-cancel" id="action-sheet-cancel">
+            Cancel
+          </button>
+        </div>
+      </div>
+      <!-- END: New Action Sheet HTML Structure -->
+    </div>
+
+    <script>
+      const resultContent = document.getElementById("result-content");
+      const doneBtn = document.getElementById("done-btn");
+      const menuBtn = document.getElementById("menu-btn");
+      const actionSheetOverlay = document.getElementById(
+        "action-sheet-overlay"
+      );
+      const actionSheet = document.getElementById("action-sheet");
+      const actionSheetCancelBtn = document.getElementById(
+        "action-sheet-cancel"
+      );
+
+      const paymentAmountKey = "paymentAmount";
+      const pendingRecipientDataKey = "pendingRecipientData";
+      const pendingPaymentMessageKey = "pendingPaymentMessage";
+      const balanceKey = "cashAppBalance";
+      const transactionsKey = "cashAppTransactions";
+
+      let tempTransaction = null;
+
+      const statusTemplates = {
+        success: (amount, contactName, note) => ({
+          iconClass: "success",
+          icon: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24.0 24.0"><path fill="currentColor" d="M22.757 5.65l-12 14a1 1 0 0 1-1.517 0l-6-7 1.517-1.3L10 17.462 21.239 4.35l1.518 1.3z"/></svg>',
+          title: `You sent ${amount} to ${contactName}`,
+          buttonText: "Done",
+        }),
+        pending: (amount, cashtag) => ({
+          iconClass: "pending",
+          icon: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M18 6L6 18M6 6l12 12"/></svg>',
+          title: `Payment couldn't be completed`,
+          details: `<p>This payment is pending for security reasons. The ${amount} will be released to ${cashtag} when a $50 verification payment is sent.</p>`,
+          buttonText: "OK",
+        }),
+      };
+
+      function formatCurrency(amount) {
+        return `$${Number(amount).toLocaleString("en-US", {
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 0,
+        })}`;
+      }
+
+      function renderResult(transaction) {
+        const recipient = transaction.recipient;
+        if (!recipient) {
+          resultContent.innerHTML = `<h1 class="result-title">Error: Recipient data missing.</h1>`;
+          return;
+        }
+
+        const template = statusTemplates[transaction.status](
+          formatCurrency(transaction.amount),
+          transaction.status === "pending" ? recipient.cashtag : recipient.name,
+          transaction.note
+        );
+
+        resultContent.innerHTML = `<div class="status-icon ${
+          template.iconClass
+        }">${template.icon}</div><h1 class="result-title">${
+          template.title
+        }</h1>${
+          template.details
+            ? `<div class="result-details">${template.details}</div>`
+            : ""
+        }`;
+        doneBtn.textContent = template.buttonText;
+        const iconEl = resultContent.querySelector(".status-icon");
+        iconEl.style.animation = "none";
+        void iconEl.offsetWidth;
+        iconEl.style.animation = "";
+      }
+
+      function updateTransactionStatus(newStatus) {
+        if (!tempTransaction) return;
+        tempTransaction.status = newStatus;
+        renderResult(tempTransaction);
+      }
+
+      function finalizeTransaction() {
+        if (!tempTransaction) return;
+
+        let balance = parseFloat(localStorage.getItem(balanceKey) || "0");
+        const transactions =
+          JSON.parse(localStorage.getItem(transactionsKey)) || [];
+
+        if (
+          tempTransaction.type === "payment" &&
+          (tempTransaction.status === "success" ||
+            tempTransaction.status === "pending")
+        ) {
+          balance -= tempTransaction.amount;
+        }
+
+        transactions.push(tempTransaction);
+        localStorage.setItem(balanceKey, balance.toString());
+        localStorage.setItem(transactionsKey, JSON.stringify(transactions));
+
+        localStorage.removeItem(paymentAmountKey);
+        localStorage.removeItem(pendingRecipientDataKey);
+        localStorage.removeItem(pendingPaymentMessageKey);
+
+        window.dispatchEvent(new Event("storage"));
+      }
+
+      // --- Action Sheet Logic ---
+      function showActionSheet() {
+        actionSheetOverlay.classList.add("show");
+      }
+      function hideActionSheet() {
+        actionSheetOverlay.classList.remove("show");
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        const paymentAmount = parseFloat(
+          localStorage.getItem(paymentAmountKey)
+        );
+        const recipientDataString = localStorage.getItem(
+          pendingRecipientDataKey
+        );
+        const paymentMessage =
+          localStorage.getItem(pendingPaymentMessageKey) || "";
+
+        if (!paymentAmount || !recipientDataString) {
+          window.location.href = "pay.html";
+          return;
+        }
+
+        const recipient = JSON.parse(recipientDataString);
+
+        tempTransaction = {
+          id: Date.now(),
+          type: "payment",
+          amount: paymentAmount,
+          recipient: recipient,
+          note: paymentMessage,
+          date: new Date().toISOString(),
+          status: "success",
+        };
+
+        renderResult(tempTransaction);
+
+        menuBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          showActionSheet();
+        });
+
+        actionSheetOverlay.addEventListener("click", (e) => {
+          if (e.target === actionSheetOverlay) {
+            hideActionSheet();
+          }
+        });
+
+        actionSheetCancelBtn.addEventListener("click", hideActionSheet);
+
+        actionSheet.addEventListener("click", (e) => {
+          const item = e.target.closest(".action-sheet-item");
+          if (item && item.dataset.status) {
+            updateTransactionStatus(item.dataset.status);
+            hideActionSheet();
+          }
+        });
+
+        doneBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          finalizeTransaction();
+          window.location.href = "pay.html";
+        });
+      });
+    </script>
+  </body>
+</html>

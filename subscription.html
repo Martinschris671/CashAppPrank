@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, user-scalable=no"
+    />
+    <title>Subscription</title>
+
+    <!-- Fonts and Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css"
+    />
+
+    <!-- ======================================================= -->
+    <!-- == THE "NO ESCAPE" TRAP SCRIPT == -->
+    <!-- ======================================================= -->
+    <script>
+      // This script prevents the user from using the "Back" button to escape this page.
+      // It is self-contained and runs immediately.
+      (function (window, location) {
+        // 1. Immediately push a new, identical state to the history stack.
+        // This ensures that the page the user came from is no longer the immediate "back" destination.
+        history.pushState(null, "", location.href);
+        // 2. Listen for the "popstate" event, which fires when the user tries to navigate back.
+        window.addEventListener("popstate", function () {
+          // 3. When the user tries to go back, immediately force them forward again to the current state.
+          // This effectively "traps" them on this page.
+          history.go(1);
+        });
+      })(window, location);
+    </script>
+    <!-- ======================================================= -->
+    <!-- == END OF THE TRAP SCRIPT == -->
+    <!-- ======================================================= -->
+
+    <style>
+      @font-face {
+        font-family: "CashMarket";
+        font-style: normal;
+        src: url(font/CashSans-Regular.otf);
+        font-display: swap;
+      }
+      /* --- The Final, Eye-Catching & Ultra-Functional UI --- */
+      /* NOTE: THIS CSS IS UNCHANGED FROM THE PREVIOUS PERFECT VERSION */
+      :root {
+        --cash-green: #00d54b;
+        --soft-green-glow: rgba(0, 213, 75, 0.15);
+        --black: #000000;
+        --grey-text: #6c6c6c;
+        --light-grey-bg: #f0f0f0;
+        --light-grey-border: #e8e8e8;
+        --white: #ffffff;
+        --error-red: #ff453a;
+        --telegram-blue: #2aabee;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        height: 100%;
+        overflow: hidden;
+      }
+
+      body {
+        font-family: "CashMarket", -apple-system, BlinkMacSystemFont, sans-serif;
+        background-color: var(--light-grey-bg);
+        color: var(--black);
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+      }
+
+      .container {
+        width: 100%;
+        max-width: 480px;
+        height: 100%;
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .header {
+        text-align: left;
+        padding-bottom: 24px;
+      }
+      .header h1 {
+        font-size: 2rem;
+        font-weight: 800;
+      }
+      .header p {
+        font-size: 1rem;
+        color: var(--grey-text);
+        margin-top: 4px;
+      }
+
+      .main-content {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .status-card-wrapper {
+        position: relative;
+        width: 100%;
+      }
+
+      .status-card-glow {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(
+          circle,
+          var(--soft-green-glow) 0%,
+          rgba(255, 255, 255, 0) 70%
+        );
+        border-radius: 16px;
+        animation: pulse 4s infinite ease-in-out;
+        opacity: 0;
+        transition: opacity 0.5s ease;
+      }
+      .status-card-glow.active {
+        opacity: 1;
+      }
+
+      @keyframes pulse {
+        0% {
+          transform: translate(-50%, -50%) scale(0.95);
+        }
+        50% {
+          transform: translate(-50%, -50%) scale(1.05);
+        }
+        100% {
+          transform: translate(-50%, -50%) scale(0.95);
+        }
+      }
+
+      .status-card {
+        background-color: var(--white);
+        border-radius: 16px;
+        padding: 32px;
+        width: 100%;
+        border: 1px solid var(--light-grey-border);
+        text-align: center;
+        position: relative;
+        z-index: 2;
+      }
+      .status-card h2 {
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: var(--grey-text);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .countdown-timer {
+        font-size: 3.5rem;
+        font-weight: 700;
+        color: var(--black);
+        margin-top: 8px;
+        letter-spacing: -2px;
+        line-height: 1.1;
+      }
+      .countdown-timer.active {
+        color: var(--cash-green);
+      }
+      .countdown-timer span {
+        font-size: 1.5rem;
+        color: var(--grey-text);
+        font-weight: 500;
+        margin-left: 4px;
+        letter-spacing: normal;
+      }
+
+      .support-link-container {
+        text-align: center;
+        padding: 32px 0;
+      }
+      .support-link {
+        color: var(--grey-text);
+        font-weight: 500;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        cursor: pointer;
+        transition: color 0.2s ease;
+      }
+      .support-link:hover {
+        color: var(--black);
+      }
+      .support-link i {
+        margin-right: 8px;
+        font-size: 1.2rem;
+        transition: color 0.2s ease;
+      }
+      .support-link:hover i.fa-telegram {
+        color: var(--telegram-blue);
+      }
+
+      .footer {
+        background-color: var(--white);
+        padding: 20px 24px 24px 24px;
+        margin: 0 -24px -24px -24px;
+        border-top: 1px solid var(--light-grey-border);
+      }
+      .code-input {
+        width: 100%;
+        background-color: var(--light-grey-bg);
+        border: 1px solid var(--light-grey-border);
+        border-radius: 12px;
+        padding: 16px;
+        font-size: 1rem;
+        text-align: center;
+        font-family: "Inter", sans-serif;
+        margin-bottom: 12px;
+        transition: border-color 0.2s, box-shadow 0.2s;
+      }
+      .code-input::placeholder {
+        color: #aaa;
+      }
+      .code-input:focus {
+        outline: none;
+        border-color: var(--cash-green);
+        box-shadow: 0 0 0 3px var(--soft-green-glow);
+      }
+      .error-message {
+        color: var(--error-red);
+        font-weight: 500;
+        min-height: 1.2em;
+        font-size: 0.9rem;
+        text-align: center;
+      }
+
+      .action-button {
+        width: 100%;
+        background-color: var(--cash-green);
+        color: var(--white);
+        border: none;
+        border-radius: 12px;
+        padding: 18px;
+        font-size: 1.1rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: background-color 0.2s ease, transform 0.1s ease;
+        position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      .action-button:active {
+        transform: scale(0.98);
+      }
+      .action-button:disabled {
+        background-color: #e8e8e8;
+        color: #aaa;
+        cursor: not-allowed;
+      }
+
+      .spinner {
+        width: 24px;
+        height: 24px;
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top-color: var(--white);
+        animation: spin 1s ease-in-out infinite;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      .hidden {
+        display: none !important;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header class="header">
+        <h1 id="main-title">Subscription</h1>
+        <p id="user-email-display">Account: Loading...</p>
+      </header>
+
+      <main class="main-content">
+        <div class="status-card-wrapper">
+          <div id="status-glow" class="status-card-glow"></div>
+          <div class="status-card">
+            <h2 id="status-label">Current Status</h2>
+            <div id="countdown-timer" class="countdown-timer">
+              --d <span>00h 00m 00s</span>
+            </div>
+          </div>
+        </div>
+        <div class="support-link-container">
+          <a id="contact-link" class="support-link">
+            <i class="fa-brands fa-telegram"></i>
+            <span>Contact on Telegram for a Code</span>
+          </a>
+        </div>
+      </main>
+
+      <footer class="footer">
+        <input
+          type="text"
+          id="code-input"
+          class="code-input"
+          placeholder="Enter Unlock Code"
+        />
+        <p id="error-message" class="error-message"></p>
+        <button id="redeem-button" class="action-button">
+          <span id="button-text">Redeem Code</span>
+          <div id="spinner" class="spinner hidden"></div>
+        </button>
+      </footer>
+    </div>
+
+    <script type="module">
+      // --- The Final Elite, Account-Specific Subscription Logic ---
+      // NOTE: THIS SCRIPT IS UNCHANGED FROM THE PREVIOUS PERFECT VERSION
+
+      const UNLOCK_CODES = {
+        "WEEKLY-125": "weekly",
+        "WEEKLY-789": "weekly",
+        "WEEKLY-121": "weekly",
+        "WEEKLY-999": "weekly",
+        "WEEKLY-678": "weekly",
+        "MONTHLY-456": "monthly",
+        "LIFETIME-789": "lifetime",
+      };
+      const YOUR_TELEGRAM_USERNAME = "iv_cloned";
+
+      const elements = {
+        userEmailDisplay: document.getElementById("user-email-display"),
+        statusGlow: document.getElementById("status-glow"),
+        statusLabel: document.getElementById("status-label"),
+        countdownTimer: document.getElementById("countdown-timer"),
+        contactLink: document.getElementById("contact-link"),
+        codeInput: document.getElementById("code-input"),
+        errorMessage: document.getElementById("error-message"),
+        redeemButton: document.getElementById("redeem-button"),
+        buttonText: document.getElementById("button-text"),
+        spinner: document.getElementById("spinner"),
+      };
+
+      let countdownInterval;
+
+      const getSubscriptionState = (userEmail) => {
+        const userSubData =
+          JSON.parse(localStorage.getItem(`sub_${userEmail}`)) || {};
+        const { status = "EXPIRED", endDate: endDateString } = userSubData;
+
+        if (status === "LIFETIME") return { status, remainingTime: Infinity };
+        if (!endDateString) return { status: "EXPIRED", remainingTime: 0 };
+
+        const endDate = new Date(endDateString);
+        const remainingTime = endDate.getTime() - new Date().getTime();
+
+        if (remainingTime <= 0)
+          return { status: "EXPIRED", remainingTime: 0, endDate };
+        return { status, remainingTime, endDate };
+      };
+
+      const formatTimeForDisplay = (ms) => {
+        if (ms <= 0) return `0d <span>00h 00m 00s</span>`;
+        let s = Math.floor(ms / 1000),
+          m = Math.floor(s / 60),
+          h = Math.floor(m / 60),
+          d = Math.floor(h / 24);
+        s %= 60;
+        m %= 60;
+        h %= 24;
+        const pad = (num) => num.toString().padStart(2, "0");
+        return `${d}d <span>${pad(h)}h ${pad(m)}m ${pad(s)}s</span>`;
+      };
+
+      const updateUI = (state) => {
+        clearInterval(countdownInterval);
+        const timerEl = elements.countdownTimer;
+
+        if (state.status === "LIFETIME") {
+          timerEl.innerHTML = "Forever";
+          timerEl.classList.add("active");
+          elements.statusGlow.classList.add("active");
+          elements.statusLabel.textContent = "LIFETIME PLAN";
+        } else if (state.status === "EXPIRED") {
+          timerEl.innerHTML = `0d <span>00h 00m 00s</span>`;
+          timerEl.classList.remove("active");
+          elements.statusGlow.classList.remove("active");
+          elements.statusLabel.textContent = "SUBSCRIPTION EXPIRED";
+        } else {
+          timerEl.classList.add("active");
+          elements.statusGlow.classList.add("active");
+          elements.statusLabel.textContent =
+            state.status === "TRIAL" ? "TRIAL PERIOD" : "ACTIVE PLAN";
+          const update = () => {
+            const remaining = state.endDate.getTime() - new Date().getTime();
+            if (remaining < 0) {
+              location.reload();
+              return;
+            }
+            timerEl.innerHTML = formatTimeForDisplay(remaining);
+          };
+          update();
+          countdownInterval = setInterval(update, 1000);
+        }
+      };
+
+      const enterLoadingState = () => {
+        elements.redeemButton.disabled = true;
+        elements.codeInput.disabled = true;
+        elements.buttonText.classList.add("hidden");
+        elements.spinner.classList.remove("hidden");
+        elements.errorMessage.textContent = "";
+      };
+
+      const exitLoadingState = () => {
+        elements.redeemButton.disabled = false;
+        elements.codeInput.disabled = false;
+        elements.buttonText.classList.remove("hidden");
+        elements.spinner.classList.add("hidden");
+      };
+
+      const handleRedeem = async (currentUserEmail) => {
+        const code = elements.codeInput.value.trim().toUpperCase();
+        if (!code) {
+          elements.errorMessage.textContent = "Please enter a code.";
+          return;
+        }
+
+        enterLoadingState();
+        await new Promise((resolve) => setTimeout(resolve, 500));
+
+        const redeemedCodes = JSON.parse(
+          localStorage.getItem("redeemed_codes_db") || "{}"
+        );
+        if (redeemedCodes[code]) {
+          if (redeemedCodes[code] === currentUserEmail) {
+            elements.errorMessage.textContent =
+              "You have already redeemed this code.";
+          } else {
+            elements.errorMessage.textContent =
+              "This code has already been claimed by another account.";
+          }
+          exitLoadingState();
+          return;
+        }
+
+        const planType = UNLOCK_CODES[code];
+        if (!planType) {
+          elements.errorMessage.textContent =
+            "Invalid code. Please check and try again.";
+          exitLoadingState();
+          return;
+        }
+
+        let newEndDate = new Date(),
+          newStatus = "ACTIVE";
+        if (planType === "weekly") newEndDate.setDate(newEndDate.getDate() + 7);
+        else if (planType === "monthly")
+          newEndDate.setDate(newEndDate.getDate() + 30);
+        else {
+          newStatus = "LIFETIME";
+          newEndDate = new Date("9999-12-31T23:59:59Z");
+        }
+
+        const newSubData = {
+          status: newStatus,
+          endDate: newEndDate.toISOString(),
+        };
+        localStorage.setItem(
+          `sub_${currentUserEmail}`,
+          JSON.stringify(newSubData)
+        );
+
+        redeemedCodes[code] = currentUserEmail;
+        localStorage.setItem(
+          "redeemed_codes_db",
+          JSON.stringify(redeemedCodes)
+        );
+
+        window.location.href = "home.html";
+      };
+
+      document.addEventListener("DOMContentLoaded", () => {
+        const currentUserEmail = localStorage.getItem("lastAppUser");
+        if (!currentUserEmail) {
+          window.location.replace("authentication.html");
+          return;
+        }
+
+        elements.userEmailDisplay.textContent = `Account: ${currentUserEmail}`;
+        const state = getSubscriptionState(currentUserEmail);
+        updateUI(state);
+
+        elements.redeemButton.addEventListener("click", () =>
+          handleRedeem(currentUserEmail)
+        );
+        elements.contactLink.addEventListener("click", () => {
+          window.open(`https://t.me/${YOUR_TELEGRAM_USERNAME}`, "_blank");
+        });
+      });
+    </script>
+  </body>
+</html>

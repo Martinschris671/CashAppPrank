@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, user-scalable=no"
+    />
+    <title>Cash App</title>
+    <style>
+      /* --- GLOBAL STYLES & FONT --- */
+      @import url("https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap");
+
+      :root {
+        --cash-green: #00d54b;
+        --cash-black: #1a1a1a;
+        --light-gray: #f0f0f0;
+        --medium-gray: #e8e8e8;
+        --dark-gray: #b3b3b3;
+        --text-color: #000;
+        --background-color: #ffffff;
+        --overlay-bg: rgba(0, 0, 0, 0.5);
+        --transition-speed: 0.4s;
+      }
+
+      * {
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Helvetica, Arial, sans-serif;
+        background-color: var(--light-gray);
+        height: 100%;
+        overflow: hidden;
+      }
+
+      /* --- MAIN APP CONTAINER --- */
+      .app-container {
+        max-width: 450px;
+        height: 100%;
+        margin: 0 auto;
+        background-color: var(--background-color);
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+      }
+
+      .main-content {
+        flex-grow: 1;
+        padding: 1.5rem 1rem;
+        overflow-y: auto;
+        padding-bottom: 100px; /* Space for bottom nav */
+      }
+
+      /* --- HEADER --- */
+      header {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        padding: 0 1rem;
+        height: 60px;
+      }
+
+      .profile-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background-color: var(--medium-gray);
+        cursor: pointer;
+        overflow: hidden;
+      }
+      .profile-icon img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      /* Default profile icon using SVG */
+      .profile-icon svg {
+        width: 100%;
+        height: 100%;
+        color: var(--dark-gray);
+      }
+
+      /* --- BALANCE SECTION --- */
+      .balance-section {
+        text-align: center;
+        padding: 2rem 0;
+      }
+
+      .balance-amount {
+        font-size: 3rem;
+        font-weight: 700;
+        color: var(--text-color);
+        margin: 0;
+        letter-spacing: -1px;
+      }
+
+      .account-info {
+        color: var(--dark-gray);
+        font-size: 0.9rem;
+        margin-top: 0.5rem;
+      }
+
+      /* --- ACTION BUTTONS --- */
+      .action-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        margin: 1rem 0;
+      }
+
+      .action-btn {
+        background-color: var(--medium-gray);
+        color: var(--text-color);
+        border: none;
+        padding: 0.8rem 2rem;
+        border-radius: 50px;
+        font-size: 1rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background-color 0.2s;
+      }
+
+      .action-btn:hover {
+        background-color: #dcdcdc;
+      }
+
+      /* --- FEATURE LIST --- */
+      .features-list {
+        margin-top: 2rem;
+        padding: 0 0.5rem;
+      }
+
+      .feature-item {
+        display: flex;
+        align-items: center;
+        padding: 1rem 0;
+        cursor: pointer;
+        border-bottom: 1px solid var(--light-gray);
+      }
+      .feature-item:last-child {
+        border-bottom: none;
+      }
+
+      .feature-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1rem;
+      }
+      .feature-icon.green {
+        background-color: var(--cash-green);
+      }
+      .feature-icon.blue {
+        background-color: #007aff;
+      }
+      .feature-icon.orange {
+        background-color: #ff9500;
+      }
+
+      .feature-icon svg {
+        width: 24px;
+        height: 24px;
+        color: white;
+      }
+
+      .feature-details {
+        flex-grow: 1;
+      }
+      .feature-title {
+        font-size: 1rem;
+        font-weight: 500;
+        color: var(--text-color);
+      }
+      .feature-subtitle {
+        font-size: 0.9rem;
+        color: var(--dark-gray);
+        display: flex;
+        align-items: center;
+      }
+
+      .interest-rate {
+        background-color: var(--light-gray);
+        color: var(--text-color);
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        margin-left: 0.5rem;
+      }
+
+      /* --- BOTTOM NAVIGATION --- */
+      .bottom-nav {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 80px;
+        background-color: var(--background-color);
+        border-top: 1px solid var(--light-gray);
+        display: flex;
+        justify-content: space-around;
+        align-items: flex-start;
+        padding-top: 10px;
+      }
+
+      .nav-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        cursor: pointer;
+        color: var(--dark-gray);
+      }
+      .nav-item.active {
+        color: var(--cash-green);
+      }
+      .nav-item svg {
+        width: 28px;
+        height: 28px;
+      }
+      .nav-item .label {
+        font-size: 0.75rem;
+        margin-top: 4px;
+        font-weight: 500;
+      }
+
+      /* --- OVERLAYS (THE MAGIC) --- */
+      .overlay {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: var(--background-color);
+        transform: translateY(100%);
+        transition: transform var(--transition-speed)
+          cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 100;
+        display: flex;
+        flex-direction: column;
+        border-top-left-radius: 16px;
+        border-top-right-radius: 16px;
+      }
+      .overlay.active {
+        transform: translateY(0);
+      }
+
+      .overlay-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem;
+        border-bottom: 1px solid var(--light-gray);
+      }
+      .overlay-header .back-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+      }
+      .overlay-header .back-btn svg {
+        width: 24px;
+        height: 24px;
+      }
+      .overlay-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+      }
+      .overlay-header .placeholder {
+        width: 24px; /* To balance the back button */
+      }
+
+      .overlay-content {
+        padding: 1.5rem;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      /* Add Money Overlay Specifics */
+      .amount-input-container {
+        width: 100%;
+        text-align: center;
+      }
+      .amount-input {
+        font-size: 4rem;
+        font-weight: 700;
+        border: none;
+        background: none;
+        text-align: center;
+        width: 100%;
+        outline: none;
+        color: var(--cash-green);
+      }
+      .amount-input::placeholder {
+        color: var(--medium-gray);
+      }
+
+      .preset-amounts {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+        width: 100%;
+        margin-top: 2rem;
+      }
+      .preset-btn {
+        background-color: var(--light-gray);
+        border: none;
+        border-radius: 8px;
+        padding: 1rem;
+        font-size: 1.2rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background-color 0.2s;
+      }
+      .preset-btn:hover {
+        background-color: var(--medium-gray);
+      }
+
+      .confirm-btn {
+        width: 100%;
+        background-color: var(--cash-green);
+        color: white;
+        border: none;
+        padding: 1rem;
+        border-radius: 8px;
+        font-size: 1.1rem;
+        font-weight: 700;
+        cursor: pointer;
+        margin-top: auto; /* Pushes to the bottom */
+        transition: background-color 0.2s;
+      }
+      .confirm-btn:disabled {
+        background-color: var(--dark-gray);
+        cursor: not-allowed;
+      }
+
+      /* --- SUCCESS & PROCESSING OVERLAY --- */
+      .processing-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(255, 255, 255, 0.8);
+        z-index: 200;
+        display: none; /* Controlled by JS */
+        align-items: center;
+        justify-content: center;
+      }
+
+      .spinner {
+        width: 50px;
+        height: 50px;
+        border: 5px solid var(--light-gray);
+        border-top-color: var(--cash-green);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      #success-overlay {
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+      }
+      .success-content {
+        animation: fadeInScale 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      @keyframes fadeInScale {
+        from {
+          opacity: 0;
+          transform: scale(0.8);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+
+      .checkmark-circle {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background-color: var(--cash-green);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto;
+      }
+
+      .checkmark-icon {
+        color: white;
+        width: 40px;
+        height: 40px;
+        stroke-width: 3;
+        stroke-dasharray: 100;
+        stroke-dashoffset: 100;
+        animation: draw 0.6s ease-out forwards;
+      }
+
+      @keyframes draw {
+        to {
+          stroke-dashoffset: 0;
+        }
+      }
+
+      .success-message {
+        font-size: 1.5rem;
+        font-weight: 500;
+        margin-top: 1.5rem;
+      }
+      .done-btn {
+        background: var(--medium-gray);
+        color: var(--text-color);
+        font-weight: 700;
+        padding: 1rem 3rem;
+        border-radius: 50px;
+        border: none;
+        margin-top: 3rem;
+        font-size: 1rem;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app-container">
+      <!-- Main Home Screen -->
+      <div class="main-content">
+        <header>
+          <div class="profile-icon">
+            <!-- Profile Pic SVG, you can replace with an <img> tag -->
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A18.683 18.683 0 0112 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 01-.437-.695z"
+                clip-rule="evenodd"
+              />
+            </svg>
+          </div>
+        </header>
+
+        <section class="balance-section">
+          <h1 id="main-balance" class="balance-amount">$100.00</h1>
+          <p id="account-info" class="account-info">
+            Account **3186 Routing **715
+          </p>
+        </section>
+
+        <section class="action-buttons">
+          <button id="add-money-btn" class="action-btn">Add Cash</button>
+          <button id="withdraw-btn" class="action-btn">Cash Out</button>
+        </section>
+
+        <section class="features-list">
+          <div class="feature-item">
+            <div class="feature-icon green">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="1.5"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.826-1.106-2.303 0-3.182.553-.414 1.278-.659 2.003-.659 1.171 0 2.318.879 2.318 2.318s-1.147 2.318-2.318 2.318zm0 0c-.577 0-1.044-.467-1.044-1.044 0-.577.467-1.044 1.044-1.044.577 0 1.044.467 1.044 1.044 0 .577-.467 1.044-1.044 1.044z"
+                />
+              </svg>
+            </div>
+            <div class="feature-details">
+              <div class="feature-title">Paychecks</div>
+              <div class="feature-subtitle">Get paid up to 2 days faster</div>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon blue">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="1.5"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-15c-.621 0-1.125-.504-1.125-1.125v-9.75c0-.621.504-1.125 1.125-1.125h.375m14.25 9.75v-4.5c0-.414-.336-.75-.75-.75h-.75m-12.75 0h-.375c-.621 0-1.125.504-1.125 1.125v4.5c0 .621.504 1.125 1.125 1.125h.375m12.75 0h.75a.75.75 0 00.75-.75v-4.5c0-.414-.336-.75-.75-.75h-.75"
+                />
+              </svg>
+            </div>
+            <div class="feature-details">
+              <div class="feature-title">Savings</div>
+              <div class="feature-subtitle">
+                Up to 4% interest <span class="interest-rate">$</span>
+              </div>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon orange">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="1.5"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            </div>
+            <div class="feature-details">
+              <div class="feature-title">Bitcoin</div>
+              <div class="feature-subtitle">0.00% today</div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- Bottom Navigation -->
+      <nav class="bottom-nav">
+        <div class="nav-item active">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+          >
+            <path d="M12 7.5a2.25 2.25 0 100 4.5 2.25 2.25 0 000-4.5z" />
+            <path
+              fill-rule="evenodd"
+              d="M1.5 4.5a3 3 0 013-3h15a3 3 0 013 3v15a3 3 0 01-3 3h-15a3 3 0 01-3-3V4.5zM3 16.5v-3.865A4.486 4.486 0 016.29 9.84a5.25 5.25 0 019.42 0 4.486 4.486 0 013.29 2.795V16.5a1.5 1.5 0 01-1.5 1.5h-15a1.5 1.5 0 01-1.5-1.5z"
+              clip-rule="evenodd"
+            />
+          </svg>
+          <span id="nav-balance" class="label">$100</span>
+        </div>
+        <div class="nav-item">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="1.5"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3.375m-3.375 2.25h10.5m-10.5 2.25h13.5m-13.5 0a4.5 4.5 0 100-9 4.5 4.5 0 000 9zm17.25-11.25a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z"
+            />
+          </svg>
+          <span class="label">Card</span>
+        </div>
+        <div class="nav-item">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="1.5"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.826-1.106-2.303 0-3.182.553-.414 1.278-.659 2.003-.659 1.171 0 2.318.879 2.318 2.318s-1.147 2.318-2.318 2.318zm0 0c-.577 0-1.044-.467-1.044-1.044 0-.577.467-1.044 1.044-1.044.577 0 1.044.467 1.044 1.044 0 .577-.467-1.044-1.044 1.044z"
+            />
+          </svg>
+          <span class="label">Pay</span>
+        </div>
+        <div class="nav-item">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="1.5"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
+            />
+          </svg>
+          <span class="label">Discover</span>
+        </div>
+        <div class="nav-item">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="1.5"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+          <span class="label">Activity</span>
+        </div>
+      </nav>
+
+      <!-- Add Money Overlay -->
+      <div id="add-money-overlay" class="overlay">
+        <div class="overlay-header">
+          <button class="back-btn" onclick="hideOverlay('add-money-overlay')">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M19.5 8.25l-7.5 7.5-7.5-7.5"
+              />
+            </svg>
+          </button>
+          <span class="overlay-title">Add Cash</span>
+          <div class="placeholder"></div>
+        </div>
+        <div class="overlay-content">
+          <div class="amount-input-container">
+            <input
+              type="text"
+              id="add-amount-input"
+              class="amount-input"
+              placeholder="$0"
+              oninput="formatAndValidateInput(this)"
+            />
+          </div>
+          <div class="preset-amounts">
+            <button class="preset-btn" onclick="setAmount(10)">$10</button>
+            <button class="preset-btn" onclick="setAmount(25)">$25</button>
+            <button class="preset-btn" onclick="setAmount(50)">$50</button>
+            <button class="preset-btn" onclick="setAmount(100)">$100</button>
+            <button class="preset-btn" onclick="setAmount(200)">$200</button>
+            <button class="preset-btn" onclick="setAmount(500)">$500</button>
+          </div>
+          <button id="confirm-add-btn" class="confirm-btn" disabled>Add</button>
+        </div>
+      </div>
+
+      <!-- Withdraw/Cash Out Overlay (placeholder, not fully functional yet) -->
+      <div id="withdraw-overlay" class="overlay">
+        <div class="overlay-header">
+          <button class="back-btn" onclick="hideOverlay('withdraw-overlay')">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M19.5 8.25l-7.5 7.5-7.5-7.5"
+              />
+            </svg>
+          </button>
+          <span class="overlay-title">Cash Out</span>
+          <div class="placeholder"></div>
+        </div>
+        <div class="overlay-content" style="justify-content: center">
+          <p>Cash Out functionality will be built next!</p>
+        </div>
+      </div>
+
+      <!-- Success Overlay -->
+      <div id="success-overlay" class="overlay">
+        <div class="success-content">
+          <div class="checkmark-circle">
+            <svg
+              class="checkmark-icon"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M4.5 12.75l6 6 9-13.5"
+              />
+            </svg>
+          </div>
+          <h2 id="success-message" class="success-message">You added $2,500</h2>
+          <button class="done-btn" onclick="hideOverlay('success-overlay')">
+            Done
+          </button>
+        </div>
+      </div>
+
+      <!-- Processing Spinner Overlay -->
+      <div id="processing-overlay" class="processing-overlay">
+        <div class="spinner"></div>
+      </div>
+    </div>
+
+    <script>
+      // --- DOM ELEMENT REFERENCES ---
+      const mainBalanceEl = document.getElementById("main-balance");
+      const navBalanceEl = document.getElementById("nav-balance");
+      const addMoneyBtn = document.getElementById("add-money-btn");
+      const withdrawBtn = document.getElementById("withdraw-btn");
+      const addMoneyOverlay = document.getElementById("add-money-overlay");
+      const withdrawOverlay = document.getElementById("withdraw-overlay");
+      const addAmountInput = document.getElementById("add-amount-input");
+      const confirmAddBtn = document.getElementById("confirm-add-btn");
+      const processingOverlay = document.getElementById("processing-overlay");
+      const successOverlay = document.getElementById("success-overlay");
+      const successMessageEl = document.getElementById("success-message");
+
+      // --- STATE MANAGEMENT ---
+      let state = {
+        balance: 100.0,
+        account: "***3186",
+        routing: "**715",
+      };
+
+      // --- UTILITY FUNCTIONS ---
+      const formatCurrency = (amount) => {
+        return new Intl.NumberFormat("en-US", {
+          style: "currency",
+          currency: "USD",
+        }).format(amount);
+      };
+
+      const formatShorthand = (amount) => {
+        if (amount >= 1000000) {
+          return "$" + (amount / 1000000).toFixed(1) + "M";
+        }
+        if (amount >= 1000) {
+          return "$" + (amount / 1000).toFixed(1) + "K";
+        }
+        return "$" + Math.floor(amount);
+      };
+
+      // --- ANIMATION FUNCTIONS ---
+      const animateNumber = (element, start, end, duration) => {
+        let startTimestamp = null;
+        const step = (timestamp) => {
+          if (!startTimestamp) startTimestamp = timestamp;
+          const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+          const currentAmount = progress * (end - start) + start;
+          element.textContent = formatCurrency(currentAmount);
+          if (progress < 1) {
+            window.requestAnimationFrame(step);
+          }
+        };
+        window.requestAnimationFrame(step);
+      };
+
+      // --- UI UPDATE FUNCTIONS ---
+      const updateUI = () => {
+        const currentBalance =
+          parseFloat(mainBalanceEl.textContent.replace(/[$,]/g, "")) ||
+          state.balance;
+        animateNumber(mainBalanceEl, currentBalance, state.balance, 800);
+        navBalanceEl.textContent = formatShorthand(state.balance);
+      };
+
+      // --- LOCAL STORAGE FUNCTIONS ---
+      const saveState = () => {
+        localStorage.setItem("cashappState", JSON.stringify(state));
+      };
+
+      const loadState = () => {
+        const savedState = localStorage.getItem("cashappState");
+        if (savedState) {
+          state = JSON.parse(savedState);
+        }
+        // Ensure balance is a number
+        state.balance = parseFloat(state.balance);
+        mainBalanceEl.textContent = formatCurrency(state.balance); // Set initial balance without animation
+        navBalanceEl.textContent = formatShorthand(state.balance);
+      };
+
+      // --- OVERLAY CONTROLS ---
+      const showOverlay = (id) => {
+        document.getElementById(id).classList.add("active");
+      };
+
+      const hideOverlay = (id) => {
+        const overlay = document.getElementById(id);
+        overlay.classList.remove("active");
+
+        // Reset state for add money overlay when hidden
+        if (id === "add-money-overlay") {
+          addAmountInput.value = "";
+          confirmAddBtn.disabled = true;
+          addAmountInput.placeholder = "$0";
+        }
+      };
+
+      // --- EVENT HANDLERS ---
+      addMoneyBtn.addEventListener("click", () =>
+        showOverlay("add-money-overlay")
+      );
+      withdrawBtn.addEventListener("click", () =>
+        showOverlay("withdraw-overlay")
+      );
+
+      confirmAddBtn.addEventListener("click", () => {
+        const amountToAdd = parseFloat(
+          addAmountInput.value.replace(/[$,]/g, "")
+        );
+        if (isNaN(amountToAdd) || amountToAdd <= 0) return;
+
+        hideOverlay("add-money-overlay");
+        processingOverlay.style.display = "flex";
+
+        setTimeout(() => {
+          processingOverlay.style.display = "none";
+
+          const startBalance = state.balance;
+          state.balance += amountToAdd;
+
+          saveState();
+          updateUI();
+
+          successMessageEl.textContent = `You added ${formatCurrency(
+            amountToAdd
+          )}`;
+          showOverlay("success-overlay");
+
+          // Trigger checkmark animation
+          const checkmark = successOverlay.querySelector(".checkmark-icon");
+          checkmark.style.strokeDashoffset = 100;
+          setTimeout(() => (checkmark.style.strokeDashoffset = 0), 100);
+        }, 1500); // Simulate network request
+      });
+
+      const setAmount = (amount) => {
+        addAmountInput.value = `$${amount}`;
+        addAmountInput.dispatchEvent(new Event("input")); // Trigger input event to enable button
+      };
+
+      const formatAndValidateInput = (input) => {
+        let value = input.value.replace(/[$,]/g, "");
+        if (isNaN(value) || value.trim() === "") {
+          input.value = "";
+          confirmAddBtn.disabled = true;
+          return;
+        }
+
+        let numValue = parseFloat(value);
+        if (numValue > 100000) numValue = 100000; // Set a max add limit for realism
+
+        input.value = `$${numValue.toLocaleString()}`;
+        confirmAddBtn.disabled = numValue <= 0;
+      };
+
+      addAmountInput.addEventListener("input", () =>
+        formatAndValidateInput(addAmountInput)
+      );
+      addAmountInput.addEventListener("focus", () => {
+        if (addAmountInput.value === "") addAmountInput.placeholder = "";
+      });
+      addAmountInput.addEventListener("blur", () => {
+        if (addAmountInput.value === "") addAmountInput.placeholder = "$0";
+      });
+
+      // --- INITIALIZATION ---
+      document.addEventListener("DOMContentLoaded", loadState);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Theme Settings</title>
+    <style>
+      /* --- 1. FONTS & BASIC SETUP --- */
+      @import url("https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&display=swap");
+
+      :root {
+        /* Light Theme (Default) */
+        --bg-color: #f4f4f4;
+        --card-bg-color: #ffffff;
+        --text-color: #1a1a1a;
+        --text-color-light: #707070;
+        --hover-bg-color: #ebebeb;
+        --accent-color: #00d54b; /* Cash App Green */
+      }
+
+      /* Dark Theme */
+      [data-theme="dark"] {
+        --bg-color: #000000;
+        --card-bg-color: #121212;
+        --text-color: #ffffff;
+        --text-color-light: #a0a0a0;
+        --hover-bg-color: #1f1f1f;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      html {
+        /* This attribute will be changed by JavaScript */
+        /* It drives the entire theme system */
+        color-scheme: light dark;
+      }
+
+      body {
+        font-family: "Roboto Mono", monospace;
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        display: grid;
+        place-items: center;
+        min-height: 100vh;
+        transition: background-color 0.3s ease, color 0.3s ease;
+      }
+
+      /* --- 2. THEME SWITCHER COMPONENT --- */
+      .theme-switcher-container {
+        width: 100%;
+        max-width: 380px;
+        background-color: var(--card-bg-color);
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        transition: background-color 0.3s ease;
+      }
+
+      .switcher-header {
+        font-size: 16px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        color: var(--text-color-light);
+        margin-bottom: 20px;
+      }
+
+      .theme-options {
+        list-style: none;
+      }
+
+      .theme-option {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+        user-select: none; /* Prevents text selection on click */
+      }
+
+      .theme-option:hover {
+        background-color: var(--hover-bg-color);
+      }
+
+      .theme-option.active {
+        /* We don't need a special background for active, 
+               the checkmark is the main indicator. */
+      }
+
+      .option-label {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        font-size: 16px;
+        font-weight: 500;
+      }
+
+      /* --- 3. ICONS --- */
+      .icon {
+        width: 24px;
+        height: 24px;
+        color: var(--text-color-light); /* Icons take the lighter text color */
+        transition: color 0.3s ease;
+      }
+
+      .checkmark-icon {
+        width: 24px;
+        height: 24px;
+        color: var(--accent-color);
+        opacity: 0; /* Hidden by default */
+        transform: scale(0.8);
+        transition: opacity 0.2s ease, transform 0.2s ease;
+      }
+
+      .theme-option.active .checkmark-icon {
+        opacity: 1; /* Visible on the active option */
+        transform: scale(1);
+      }
+
+      .theme-option.active .option-label .icon {
+        color: var(--text-color); /* Active icon takes the main text color */
+      }
+    </style>
+  </head>
+  <body>
+    <div class="theme-switcher-container">
+      <div class="switcher-header">Display</div>
+      <ul class="theme-options">
+        <!-- Light Theme Option -->
+        <li class="theme-option" data-theme-option="light">
+          <div class="option-label">
+            <!-- Sun Icon SVG -->
+            <svg
+              class="icon"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z"
+              />
+            </svg>
+            <span>Light</span>
+          </div>
+          <!-- Checkmark Icon SVG -->
+          <svg
+            class="checkmark-icon"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z"
+              clip-rule="evenodd"
+            />
+          </svg>
+        </li>
+
+        <!-- Dark Theme Option -->
+        <li class="theme-option" data-theme-option="dark">
+          <div class="option-label">
+            <!-- Moon Icon SVG -->
+            <svg
+              class="icon"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z"
+              />
+            </svg>
+            <span>Dark</span>
+          </div>
+          <svg
+            class="checkmark-icon"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z"
+              clip-rule="evenodd"
+            />
+          </svg>
+        </li>
+
+        <!-- System Theme Option -->
+        <li class="theme-option" data-theme-option="system">
+          <div class="option-label">
+            <!-- Desktop Icon SVG -->
+            <svg
+              class="icon"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-1.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25A2.25 2.25 0 015.25 3h13.5A2.25 2.25 0 0121 5.25z"
+              />
+            </svg>
+            <span>System</span>
+          </div>
+          <svg
+            class="checkmark-icon"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z"
+              clip-rule="evenodd"
+            />
+          </svg>
+        </li>
+      </ul>
+    </div>
+
+    <script>
+      const THEME_KEY = "app-theme-preference";
+
+      const themeOptions = document.querySelectorAll(".theme-option");
+      const htmlElement = document.documentElement;
+
+      // Function to apply the chosen theme
+      const applyTheme = (theme) => {
+        // Determine the actual theme (light/dark)
+        let effectiveTheme = theme;
+        if (theme === "system") {
+          effectiveTheme = window.matchMedia("(prefers-color-scheme: dark)")
+            .matches
+            ? "dark"
+            : "light";
+        }
+
+        // Apply the theme to the <html> element
+        htmlElement.setAttribute("data-theme", effectiveTheme);
+
+        // Update the UI to show the active selection
+        themeOptions.forEach((option) => {
+          if (option.dataset.themeOption === theme) {
+            option.classList.add("active");
+          } else {
+            option.classList.remove("active");
+          }
+        });
+      };
+
+      // Function to set and save the theme
+      const setTheme = (theme) => {
+        localStorage.setItem(THEME_KEY, theme);
+        applyTheme(theme);
+      };
+
+      // Add click listeners to each theme option button
+      themeOptions.forEach((option) => {
+        option.addEventListener("click", () => {
+          const selectedTheme = option.dataset.themeOption;
+          setTheme(selectedTheme);
+        });
+      });
+
+      // Listen for changes in the OS theme preference
+      window
+        .matchMedia("(prefers-color-scheme: dark)")
+        .addEventListener("change", (e) => {
+          const savedTheme = localStorage.getItem(THEME_KEY) || "system";
+          // If the user has 'system' selected, re-apply the theme
+          if (savedTheme === "system") {
+            applyTheme("system");
+          }
+        });
+
+      // On initial page load, apply the saved theme or default to 'system'
+      document.addEventListener("DOMContentLoaded", () => {
+        const savedTheme = localStorage.getItem(THEME_KEY) || "system";
+        applyTheme(savedTheme);
+      });
+    </script>
+  </body>
+</html>
