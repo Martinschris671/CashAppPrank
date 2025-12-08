@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>Activate | Cash App</title>
+    <!-- Supabase CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+      /* --- FONT SETUP --- */
+      @font-face {
+        font-family: "CashMarketR";
+        font-style: normal;
+        src: url(font/CashMarket-RegularRounded.otf);
+        font-display: swap;
+      }
+
+      :root {
+        /* --- Dark Mode (Default) --- */
+        --bg-color: #1c1c1e;
+        --text-primary: #ffffff;
+        --text-secondary: #8d8d8d;
+
+        /* Input Colors */
+        --input-bg: #474749;
+        --input-placeholder: #a1a1a3;
+        --input-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+
+        /* Button Colors */
+        --btn-color: #00bc06;
+        --btn-text: #ffffff;
+
+        /* Status Colors */
+        --error-color: #ff453a;
+        --success-color: #00d632;
+      }
+
+      [data-theme="light"] {
+        /* --- Light Mode Variables --- */
+        --bg-color: #ffffff;
+        --text-primary: #000000;
+        --text-secondary: #6e6e6e;
+        --input-bg: #f2f2f2;
+        --input-placeholder: #a0a0a0;
+        --input-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        --btn-color: #00bc06;
+        --btn-text: #ffffff;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      body {
+        font-family: "CashMarketR", -apple-system, BlinkMacSystemFont,
+          "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        background-color: var(--bg-color);
+        color: var(--text-primary);
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        transition: background-color 0.3s ease, color 0.3s ease;
+      }
+
+      .app-container {
+        width: 100%;
+        max-width: 480px;
+        margin: 0 auto;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        padding: 20px 24px;
+        position: relative;
+      }
+
+      /* --- HEADER --- */
+      .header {
+        margin-top: 40px;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 60px;
+      }
+
+      .header-text h1 {
+        font-size: 28px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        margin-bottom: 5px;
+      }
+
+      .header-text p {
+        color: var(--text-secondary);
+        font-size: 15px;
+        font-weight: 500;
+      }
+
+      .header-right {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        margin-top: 10px;
+      }
+
+      .step-indicator {
+        color: var(--text-primary);
+        font-size: 14px;
+        font-weight: 600;
+      }
+
+      .contact-link {
+        margin-top: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--btn-color);
+        text-decoration: none;
+        opacity: 0.9;
+        transition: opacity 0.2s;
+      }
+
+      .contact-link:hover {
+        opacity: 1;
+        text-decoration: underline;
+      }
+
+      /* --- MAIN CONTENT --- */
+      .main-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        margin-bottom: 120px;
+      }
+
+      .input-label {
+        text-align: center;
+        font-size: 17px;
+        font-weight: 700;
+        margin-bottom: 15px;
+        display: block;
+      }
+
+      /* Status Message Styling */
+      #status {
+        text-align: center;
+        min-height: 20px;
+        font-size: 13px;
+        font-weight: 600;
+        margin-bottom: 15px;
+        transition: opacity 0.3s;
+      }
+
+      .input-wrapper {
+        position: relative;
+        width: 100%;
+      }
+
+      input[type="text"] {
+        width: 100%;
+        background-color: var(--input-bg);
+        border: none;
+        border-radius: 12px;
+        padding: 18px 20px;
+        font-size: 16px;
+        color: var(--text-primary);
+        outline: none;
+        font-family: inherit;
+        box-shadow: var(--input-shadow);
+        transition: all 0.3s ease;
+        text-align: left; /* Kept left aligned per previous styles */
+      }
+
+      input[type="text"]::placeholder {
+        color: var(--input-placeholder);
+        font-weight: 500;
+      }
+
+      input[type="text"]:focus {
+        filter: brightness(1.05);
+      }
+
+      /* Logout Link Styling */
+      .logout-container {
+        text-align: center;
+        margin-top: 15px;
+      }
+
+      .logout-link {
+        font-size: 14px;
+        color: var(--error-color); /* Red to indicate exit */
+        text-decoration: none;
+        font-weight: 600;
+        opacity: 0.8;
+        cursor: pointer;
+        transition: opacity 0.2s;
+      }
+
+      .logout-link:hover {
+        opacity: 1;
+        text-decoration: underline;
+      }
+
+      /* --- FOOTER / BUTTON --- */
+      .footer {
+        margin-bottom: 30px;
+        width: 100%;
+      }
+
+      .continue-btn {
+        width: 100%;
+        background-color: var(--btn-color);
+        color: var(--btn-text);
+        border: none;
+        border-radius: 50px;
+        padding: 16px;
+        font-size: 17px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-align: center;
+      }
+
+      .continue-btn:disabled {
+        cursor: default;
+        background-color: var(--btn-color);
+        opacity: 0.85;
+        color: rgba(255, 255, 255, 0.3);
+      }
+
+      /* --- THEME TOGGLE (Hidden/Clean) --- */
+      .theme-toggle {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        background: none;
+        border: 1px solid var(--text-secondary);
+        color: var(--text-secondary);
+        padding: 5px 10px;
+        border-radius: 15px;
+        font-size: 10px;
+        cursor: pointer;
+        opacity: 0.3;
+        transition: opacity 0.2s;
+        z-index: 10;
+      }
+      .theme-toggle:hover {
+        opacity: 1;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Theme Switcher -->
+    <button class="theme-toggle" onclick="toggleTheme()">Theme</button>
+
+    <div class="app-container">
+      <!-- Header -->
+      <div class="header">
+        <div class="header-text">
+          <h1>Welcome</h1>
+          <p>Cashapp V3 | ivcloned</p>
+        </div>
+
+        <div class="header-right">
+          <!-- Final Step -->
+          <div class="step-indicator">3 of 3</div>
+          <a href="https://t.me/iv_cloned" target="_blank" class="contact-link"
+            >Contact Me</a
+          >
+        </div>
+      </div>
+
+      <!-- Input Section -->
+      <div class="main-content">
+        <label class="input-label">Enter your serial key</label>
+
+        <!-- Status/Error Message -->
+        <div id="status"></div>
+
+        <div class="input-wrapper">
+          <input
+            type="text"
+            id="key-input"
+            placeholder="Serial Key"
+            autocomplete="off"
+          />
+        </div>
+
+        <!-- Logout Link Below Input -->
+        <div class="logout-container">
+          <a id="logout-btn" class="logout-link">Log Out</a>
+        </div>
+      </div>
+
+      <!-- Footer Button -->
+      <div class="footer">
+        <button id="activate-btn" class="continue-btn" disabled>
+          Continue
+        </button>
+      </div>
+    </div>
+
+    <script>
+      /* =========================================
+           1. UI LOGIC (Theme & Button State)
+           ========================================= */
+      const keyInput = document.getElementById("key-input");
+      const activateBtn = document.getElementById("activate-btn");
+      const logoutBtn = document.getElementById("logout-btn");
+      const statusDiv = document.getElementById("status");
+      const body = document.body;
+
+      // Input Listener
+      keyInput.addEventListener("input", function () {
+        const value = this.value.trim();
+        if (value.length > 0) {
+          activateBtn.removeAttribute("disabled");
+          activateBtn.style.color = "#FFFFFF";
+          activateBtn.style.opacity = "1";
+        } else {
+          activateBtn.setAttribute("disabled", "true");
+          activateBtn.style.color = "rgba(255, 255, 255, 0.3)";
+          activateBtn.style.opacity = "0.85";
+        }
+      });
+
+      // Theme Toggle
+      function toggleTheme() {
+        const currentTheme = body.getAttribute("data-theme");
+        if (currentTheme === "light") {
+          body.removeAttribute("data-theme");
+        } else {
+          body.setAttribute("data-theme", "light");
+        }
+      }
+
+      /* =========================================
+           2. SUPABASE LOGIC (From your snippet)
+           ========================================= */
+      const SUPABASE_URL = "https://tcdbbanyiaxalbqgfgzf.supabase.co";
+      const SUPABASE_ANON_KEY =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRjZGJiYW55aWF4YWxicWdmZ3pmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2MTMwNjAsImV4cCI6MjA4MDE4OTA2MH0.RnCvwY7FNOCjDjH7LeWXrU0q0C3Tpm947N7idGtHe0I";
+
+      const supabaseClient = supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_ANON_KEY
+      );
+
+      // Guard: Check Session & Active Key
+      (async function guard() {
+        // Check session
+        const {
+          data: { session },
+        } = await supabaseClient.auth.getSession();
+        if (!session) {
+          window.location.href = "auth.html";
+          return;
+        }
+
+        const {
+          data: { user },
+        } = await supabaseClient.auth.getUser();
+
+        // Check if key already active
+        const { data: activeKey } = await supabaseClient
+          .from("keys")
+          .select("expiration_timestamp")
+          .eq("activated_by_user_id", user.id)
+          .gt("expiration_timestamp", new Date().toISOString())
+          .limit(1);
+
+        if (activeKey && activeKey.length > 0) {
+          window.location.href = "home.html";
+        }
+      })();
+
+      // Activation Logic
+      activateBtn.addEventListener("click", async () => {
+        const key = keyInput.value.trim();
+
+        if (!key) return;
+
+        // UI Loading State
+        statusDiv.style.color = "var(--text-secondary)";
+        statusDiv.innerText = "Verifying...";
+        activateBtn.innerText = "Processing...";
+        activateBtn.setAttribute("disabled", "true");
+
+        const {
+          data: { user },
+        } = await supabaseClient.auth.getUser();
+
+        // Check key existence
+        const { data: keyData, error } = await supabaseClient
+          .from("keys")
+          .select("*")
+          .eq("key_string", key)
+          .single();
+
+        if (!keyData || error || keyData.is_used) {
+          // Error State
+          statusDiv.style.color = "var(--error-color)";
+          statusDiv.innerText = "Invalid or already used key.";
+          // Reset Button
+          activateBtn.innerText = "Continue";
+          activateBtn.removeAttribute("disabled");
+          return;
+        }
+
+        // Update key (Activate it)
+        const expirationTime = new Date(Date.now() + keyData.duration_ms);
+        const { error: updateError } = await supabaseClient
+          .from("keys")
+          .update({
+            is_used: true,
+            activated_by_user_id: user.id,
+            expiration_timestamp: expirationTime.toISOString(),
+          })
+          .eq("key_string", key);
+
+        if (updateError) {
+          statusDiv.style.color = "var(--error-color)";
+          statusDiv.innerText = "Error activating key.";
+          activateBtn.innerText = "Continue";
+          activateBtn.removeAttribute("disabled");
+        } else {
+          // Success State
+          statusDiv.style.color = "var(--success-color)";
+          statusDiv.innerText = "Success! Redirecting...";
+          setTimeout(() => (window.location.href = "home.html"), 1500);
+        }
+      });
+
+      // Logout Logic
+      logoutBtn.addEventListener("click", async () => {
+        await supabaseClient.auth.signOut();
+        window.location.href = "auth.html";
+      });
+    </script>
+  </body>
+</html>

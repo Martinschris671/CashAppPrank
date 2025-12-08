@@ -22,6 +22,63 @@
     />
     <link rel="stylesheet" href="saving.css" />
     <link rel="stylesheet" href="app.css" />
+    <!-- Load Supabase Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- PURE SECURITY SCRIPT (No UI) -->
+    <script>
+      const SUPABASE_URL = "https://tcdbbanyiaxalbqgfgzf.supabase.co";
+      const SUPABASE_ANON_KEY =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRjZGJiYW55aWF4YWxicWdmZ3pmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2MTMwNjAsImV4cCI6MjA4MDE4OTA2MH0.RnCvwY7FNOCjDjH7LeWXrU0q0C3Tpm947N7idGtHe0I";
+
+      const supabaseClient = supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_ANON_KEY
+      );
+      const AUTH_PAGE = "auth.html";
+      const KEY_PAGE = "keys.html";
+
+      (async function secureGuard() {
+        // 1. Check if Logged In
+        const {
+          data: { session },
+        } = await supabaseClient.auth.getSession();
+        if (!session) {
+          window.location.replace(AUTH_PAGE);
+          return;
+        }
+
+        // 2. Check if Key is Valid
+        const {
+          data: { user },
+        } = await supabaseClient.auth.getUser();
+        const { data: activeKeys } = await supabaseClient
+          .from("keys")
+          .select("expiration_timestamp")
+          .eq("activated_by_user_id", user.id)
+          .gt("expiration_timestamp", new Date().toISOString()) // Must be in the future
+          .order("expiration_timestamp", { ascending: false })
+          .limit(1);
+
+        // 3. If No Valid Key -> Kick to Key Page
+        if (!activeKeys || activeKeys.length === 0) {
+          window.location.replace(KEY_PAGE);
+          return;
+        }
+
+        // 4. (Optional) Auto-Kick when time runs out
+        // This runs silently in the background
+        const now = new Date();
+        const expires = new Date(activeKeys[0].expiration_timestamp);
+        const msRemaining = expires - now;
+
+        if (msRemaining > 0 && msRemaining < 2147483647) {
+          setTimeout(() => {
+            window.location.replace(KEY_PAGE);
+          }, msRemaining);
+        }
+      })();
+    </script>
     <!-- Anti-Flicker Dark Mode Script -->
     <script>
       (function () {

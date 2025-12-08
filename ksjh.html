@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Logo Screen</title>
+    <style>
+      body,
+      html {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        /* Flexbox ensures the logo is always perfectly centered */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        /* 
+               BACKGROUND COLOR:
+               You requested: #ff0acf14 (which is 92% transparent).
+               I have used #ff0acf (Solid) so it looks good on screen.
+               If you truly want the transparent version, change the line below to: */
+        background-color: #ff0acf14;
+      }
+
+      #vector {
+        /* Exact size requested */
+        width: 900px;
+        height: 900px;
+
+        /* 
+               RESPONSIVE FIX:
+               Since 900px is wider than mobile phones, this code 
+               ensures it shrinks to fit smaller screens while 
+               staying huge on desktop.
+            */
+        max-width: 90vw; /* 90% of the viewport width */
+        max-height: 90vh; /* 90% of the viewport height */
+        height: auto; /* Maintains aspect ratio */
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Your SVG Logo -->
+    <svg
+      id="vector"
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 288.0 288.0"
+    >
+      <path
+        fill="#ffffff"
+        d="M190.35,109.71C188.34,104.02 183.86,99.52 178.19,97.46C173.02,95.81 168.26,95.81 158.57,95.81L129.48,95.81C119.83,95.81 115.03,95.81 109.86,97.41C104.19,99.48 99.71,103.97 97.65,109.66C96,114.89 96,119.71 96,129.39L96,158.57C96,168.29 96,173.06 97.6,178.29C99.66,183.98 104.14,188.48 109.81,190.54C115.03,192.19 119.83,192.19 129.43,192.19L158.52,192.19C168.17,192.19 172.97,192.19 178.14,190.54C183.81,188.48 188.3,183.98 190.35,178.29C192,173.06 192,168.25 192,158.57L192,129.43C192,119.75 192,114.94 190.35,109.71ZM165.29,128.79L159.76,133.33C159.25,133.75 158.57,133.66 158.2,133.15C155.36,129.66 150.97,127.69 146.17,127.69C140.82,127.69 137.48,130.03 137.48,133.33C137.34,136.13 139.95,137.55 147.96,139.3C158.06,141.45 162.68,145.67 162.68,152.79C162.68,161.69 155.46,168.25 144.16,168.98L143.06,174.26C142.97,174.76 142.51,175.13 141.96,175.13L133.27,175.13C132.54,175.13 132.04,174.44 132.18,173.75L133.55,167.88C127.97,166.27 123.44,163.15 120.83,159.35C120.51,158.84 120.61,158.2 121.06,157.83L127.15,153.11C127.65,152.69 128.38,152.83 128.75,153.34C131.95,157.83 136.89,160.49 142.83,160.49C148.18,160.49 152.21,157.88 152.21,154.12C152.21,151.23 150.2,149.9 143.38,148.47C131.77,145.95 127.15,141.64 127.15,134.53C127.15,126.27 134.05,120.08 144.48,119.25L145.62,113.79C145.72,113.29 146.17,112.92 146.72,112.92L155.27,112.92C155.96,112.92 156.51,113.56 156.37,114.25L155.05,120.35C159.53,121.73 163.19,124.21 165.47,127.28C165.84,127.74 165.75,128.42 165.29,128.79Z"
+        id="path_0"
+      />
+    </svg>
+  </body>
+</html>

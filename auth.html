@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <!-- Anti-Flicker Dark Mode Script -->
+    <script>
+      (function () {
+        let theme =
+          window.localStorage.getItem("app-theme-preference") || "system";
+        if (theme === "system") {
+          theme = window.matchMedia("(prefers-color-scheme: dark)").matches
+            ? "dark"
+            : "light";
+        }
+        document.documentElement.setAttribute("data-theme", theme);
+      })();
+    </script>
+
+    <title>Sign In | Cash App</title>
+    <!-- Supabase CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+      /* --- FONT SETUP --- */
+      @font-face {
+        font-family: "CashMarketR";
+        font-style: normal;
+        src: url(font/CashSans-Regular.otf);
+        font-display: swap;
+      }
+
+      :root {
+        /* --- Dark Mode (Default) --- */
+        --bg-color: #1c1c1e;
+        --text-primary: #ffffff;
+        --text-secondary: #8d8d8d;
+
+        /* Input Colors */
+        --input-bg: #474749;
+        --input-placeholder: #a1a1a3;
+        --input-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+        --icon-color: #a1a1a3;
+
+        /* Button Colors */
+        --btn-color: #00bc06;
+        --btn-text: #ffffff;
+
+        /* Error Color */
+        --error-color: #ff453a;
+      }
+
+      [data-theme="light"] {
+        /* --- Light Mode Variables --- */
+        --bg-color: #ffffff;
+        --text-primary: #000000;
+        --text-secondary: #6e6e6e;
+        --input-bg: #f2f2f2;
+        --input-placeholder: #a0a0a0;
+        --input-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        --icon-color: #a0a0a0;
+        --btn-color: #00bc06;
+        --btn-text: #ffffff;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      body {
+        font-family: "CashMarketR", -apple-system, BlinkMacSystemFont,
+          "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        background-color: var(--bg-color);
+        color: var(--text-primary);
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        transition: background-color 0.3s ease, color 0.3s ease;
+      }
+
+      .app-container {
+        width: 100%;
+        max-width: 480px;
+        margin: 0 auto;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        padding: 20px 24px;
+        position: relative;
+      }
+
+      /* --- HEADER --- */
+      .header {
+        margin-top: 40px;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 30px;
+      }
+
+      .header-text h1 {
+        font-size: 28px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        margin-bottom: 5px;
+      }
+
+      .header-text p {
+        color: var(--text-secondary);
+        font-size: 15px;
+        font-weight: 500;
+      }
+
+      .header-right {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        margin-top: 10px;
+      }
+
+      .step-indicator {
+        color: var(--text-primary);
+        font-size: 14px;
+        font-weight: 600;
+      }
+
+      .contact-link {
+        margin-top: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--btn-color);
+        text-decoration: none;
+        opacity: 0.9;
+        transition: opacity 0.2s;
+      }
+
+      .contact-link:hover {
+        opacity: 1;
+        text-decoration: underline;
+      }
+
+      /* --- MAIN CONTENT --- */
+      .main-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        margin-bottom: 80px;
+      }
+
+      .page-title {
+        text-align: center;
+        font-size: 22px;
+        font-weight: 700;
+        margin-bottom: 15px;
+        transition: opacity 0.3s ease;
+      }
+
+      /* Error Message Styles */
+      #message {
+        text-align: center;
+        min-height: 24px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--error-color);
+        margin-bottom: 15px;
+        opacity: 0.9;
+        line-height: 1.4;
+        padding: 0 10px;
+      }
+
+      .input-group {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        margin-bottom: 20px;
+      }
+
+      .input-wrapper {
+        position: relative;
+        width: 100%;
+      }
+
+      input[type="text"],
+      input[type="email"],
+      input[type="password"] {
+        width: 100%;
+        background-color: var(--input-bg);
+        border: none;
+        border-radius: 12px;
+        padding: 18px 20px;
+        padding-right: 50px;
+        font-size: 16px;
+        color: var(--text-primary);
+        outline: none;
+        font-family: inherit;
+        box-shadow: var(--input-shadow);
+        transition: all 0.3s ease;
+        text-align: left;
+      }
+
+      input::placeholder {
+        color: var(--input-placeholder);
+        font-weight: 500;
+      }
+
+      input:focus {
+        filter: brightness(1.05);
+      }
+
+      /* Toggle Password Icon */
+      .toggle-password {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 5px;
+      }
+
+      .toggle-password svg {
+        width: 22px;
+        height: 22px;
+        fill: none;
+        stroke: var(--icon-color);
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        transition: stroke 0.3s ease;
+      }
+
+      .toggle-password:hover svg {
+        stroke: var(--text-primary);
+      }
+
+      /* Switch Link */
+      .switch-container {
+        text-align: center;
+        margin-top: 10px;
+      }
+      .switch-text {
+        color: var(--text-secondary);
+        font-size: 14px;
+        font-weight: 500;
+      }
+      .switch-action {
+        color: var(--btn-color);
+        font-weight: 600;
+        cursor: pointer;
+        margin-left: 5px;
+        text-decoration: none;
+      }
+
+      /* --- FOOTER / BUTTON --- */
+      .footer {
+        margin-bottom: 30px;
+        width: 100%;
+      }
+
+      .continue-btn {
+        width: 100%;
+        background-color: var(--btn-color);
+        color: var(--btn-text);
+        border: none;
+        border-radius: 50px;
+        padding: 16px;
+        font-size: 17px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-align: center;
+        font-family: "CashMarketR", -apple-system, BlinkMacSystemFont,
+          "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      }
+
+      .continue-btn:disabled {
+        cursor: default;
+        background-color: var(--btn-color);
+        opacity: 0.85;
+        color: rgba(255, 255, 255, 0.3);
+      }
+
+      .continue-btn:active {
+        transform: scale(0.98);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app-container">
+      <div class="header">
+        <div class="header-text">
+          <h1>Welcome</h1>
+          <p>Cashapp V3 | ivcloned</p>
+        </div>
+
+        <div class="header-right">
+          <div class="step-indicator">2 of 3</div>
+          <a href="https://t.me/iv_cloned" target="_blank" class="contact-link"
+            >Contact Me</a
+          >
+        </div>
+      </div>
+
+      <div class="main-content">
+        <h2 id="pageTitle" class="page-title">Sign in to Cash App</h2>
+
+        <!-- Error Message Display -->
+        <div id="message"></div>
+
+        <div class="input-group">
+          <div class="input-wrapper">
+            <!-- Mapped ID: emailInput to emulate 'email' -->
+            <input
+              type="email"
+              id="emailInput"
+              placeholder="Email"
+              autocomplete="off"
+            />
+          </div>
+
+          <div class="input-wrapper">
+            <!-- Mapped ID: passInput to emulate 'password' -->
+            <input
+              type="password"
+              id="passInput"
+              placeholder="Password"
+              autocomplete="off"
+            />
+            <div class="toggle-password" onclick="togglePasswordVisibility()">
+              <svg id="eyeIcon" viewBox="0 0 24 24">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="switch-container">
+          <span id="switchText" class="switch-text">No account?</span>
+          <span id="switchAction" class="switch-action">Create one</span>
+        </div>
+      </div>
+
+      <div class="footer">
+        <button id="continueBtn" class="continue-btn" disabled>Sign In</button>
+      </div>
+    </div>
+
+    <script>
+      /* =========================================
+           1. UI LOGIC (Eyes, Validation)
+           ========================================= */
+      const emailInput = document.getElementById("emailInput");
+      const passInput = document.getElementById("passInput");
+      const continueBtn = document.getElementById("continueBtn");
+      const pageTitle = document.getElementById("pageTitle");
+      const switchText = document.getElementById("switchText");
+      const switchAction = document.getElementById("switchAction");
+      const eyeIcon = document.getElementById("eyeIcon");
+      const messageDiv = document.getElementById("message");
+      const body = document.body;
+
+      // Password Visibility
+      function togglePasswordVisibility() {
+        const currentType = passInput.getAttribute("type");
+        if (currentType === "password") {
+          passInput.setAttribute("type", "text");
+          eyeIcon.innerHTML = `
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M1 1l22 22"></path>
+                    <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"></path>
+                `;
+        } else {
+          passInput.setAttribute("type", "password");
+          eyeIcon.innerHTML = `
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                `;
+        }
+      }
+
+      // Input Validation (Enables Button)
+      function checkInputs() {
+        const email = emailInput.value.trim();
+        const pass = passInput.value.trim();
+
+        if (email.length > 0 && pass.length > 0) {
+          continueBtn.removeAttribute("disabled");
+          continueBtn.style.color = "#FFFFFF";
+          continueBtn.style.opacity = "1";
+        } else {
+          continueBtn.setAttribute("disabled", "true");
+          continueBtn.style.color = "rgba(255, 255, 255, 0.3)";
+          continueBtn.style.opacity = "0.85";
+        }
+      }
+
+      emailInput.addEventListener("input", checkInputs);
+      passInput.addEventListener("input", checkInputs);
+
+      /* =========================================
+           2. SUPABASE / AUTH LOGIC (Integrated)
+           ========================================= */
+      const SUPABASE_URL = "https://tcdbbanyiaxalbqgfgzf.supabase.co";
+      const SUPABASE_ANON_KEY =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRjZGJiYW55aWF4YWxicWdmZ3pmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2MTMwNjAsImV4cCI6MjA4MDE4OTA2MH0.RnCvwY7FNOCjDjH7LeWXrU0q0C3Tpm947N7idGtHe0I";
+
+      const supabaseClient = supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_ANON_KEY
+      );
+
+      let isLogin = true;
+
+      // Redirect if already logged in
+      supabaseClient.auth.getSession().then(({ data: { session } }) => {
+        if (session) window.location.href = "keys.html";
+      });
+
+      // Helper: Translate Raw Errors to User-Friendly Messages
+      function getFriendlyErrorMessage(rawMessage) {
+        const msg = rawMessage.toLowerCase();
+
+        // Sign In Errors
+        if (msg.includes("invalid login credentials")) {
+          return "The email or password you entered is incorrect.";
+        }
+        if (msg.includes("email not confirmed")) {
+          return "Please verify your email address to log in.";
+        }
+
+        // Sign Up Errors
+        if (msg.includes("user already registered")) {
+          return "This email is already in use. Please sign in.";
+        }
+        if (msg.includes("password should be")) {
+          return "Password is too weak. Please use at least 6 characters.";
+        }
+        if (msg.includes("unable to validate email")) {
+          return "Please enter a valid email address.";
+        }
+        if (msg.includes("rate limit")) {
+          return "Too many attempts. Please try again later.";
+        }
+
+        // Network / Unknown
+        if (msg.includes("fetch failed") || msg.includes("network")) {
+          return "Network error. Please check your connection.";
+        }
+
+        // Fallback
+        return rawMessage;
+      }
+
+      // Toggle Login / Signup Mode
+      switchAction.addEventListener("click", () => {
+        // UI Animation Fade
+        pageTitle.style.opacity = "0";
+
+        setTimeout(() => {
+          isLogin = !isLogin;
+
+          // Update Texts
+          pageTitle.innerText = isLogin
+            ? "Sign in to Cash App"
+            : "Create Account";
+
+          continueBtn.innerText = isLogin ? "Sign In" : "Sign Up";
+
+          switchText.innerText = isLogin ? "No account?" : "Have an account?";
+
+          switchAction.innerText = isLogin ? "Create one" : "Sign In";
+
+          // Clear Errors & Inputs
+          messageDiv.innerText = "";
+          emailInput.value = "";
+          passInput.value = "";
+          checkInputs(); // Update button state
+
+          // Fade In
+          pageTitle.style.opacity = "1";
+        }, 200);
+      });
+
+      // Submit Logic
+      continueBtn.addEventListener("click", async () => {
+        const email = emailInput.value;
+        const password = passInput.value;
+
+        // Simple visual loading state
+        const originalBtnText = continueBtn.innerText;
+        continueBtn.innerText = "Processing...";
+        continueBtn.setAttribute("disabled", "true");
+        messageDiv.innerText = "";
+
+        if (isLogin) {
+          // SIGN IN
+          const { error } = await supabaseClient.auth.signInWithPassword({
+            email,
+            password,
+          });
+          if (error) {
+            messageDiv.style.color = "var(--error-color)";
+            messageDiv.innerText = getFriendlyErrorMessage(error.message);
+            continueBtn.innerText = originalBtnText;
+            checkInputs(); // Re-enable button
+          } else {
+            window.location.href = "keys.html";
+          }
+        } else {
+          // SIGN UP
+          const { error } = await supabaseClient.auth.signUp({
+            email,
+            password,
+          });
+          if (error) {
+            messageDiv.style.color = "var(--error-color)";
+            messageDiv.innerText = getFriendlyErrorMessage(error.message);
+            continueBtn.innerText = originalBtnText;
+            checkInputs(); // Re-enable button
+          } else {
+            // Success (Green message)
+            messageDiv.style.color = "var(--btn-color)";
+            messageDiv.innerText =
+              "Check your email to verify your new account.";
+
+            // Switch back to login mode automatically after a moment or stay
+            // For better UX, we reset fields and ask them to login
+            isLogin = true;
+            pageTitle.innerText = "Sign in to Cash App";
+            continueBtn.innerText = "Sign In";
+            switchText.innerText = "No account?";
+            switchAction.innerText = "Create one";
+
+            emailInput.value = "";
+            passInput.value = "";
+            checkInputs();
+          }
+        }
+      });
+    </script>
+  </body>
+</html>
