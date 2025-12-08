@@ -466,9 +466,7 @@
         const continueBtn = document.getElementById("continueBtn");
 
         // --- Config ---
-        // UPDATED: Set exactly to 5 seconds (5000ms)
-        const initialAnimationDuration = 5000;
-
+        const initialAnimationDuration = 5000; // 5 Seconds
         const nextPageUrl = "auth.html";
         const toolPageUrl = "home.html";
         const storageKey = "hasClickedGetStarted_CashAppV2_Final";
@@ -511,7 +509,19 @@
 
         if (isAuthorized) {
           console.log("User verified. Redirecting to home...");
-          window.location.replace(toolPageUrl);
+
+          // PLAY ANIMATION FOR 5 SECONDS FOR LOGGED-IN USERS TOO
+          logoContainer.style.animation = `logoShrinkEffect ${
+            initialAnimationDuration / 1000
+          }s ease-in-out forwards`;
+          loadingScreen.style.animation = `screenFadeOutEffect ${
+            initialAnimationDuration / 1000
+          }s ease-in-out forwards`;
+
+          setTimeout(() => {
+            window.location.replace(toolPageUrl);
+          }, initialAnimationDuration);
+
           return;
         }
 
@@ -520,7 +530,7 @@
 
         if (hasClickedBefore) {
           // --- RETURNING USER ---
-          // Play Loading Animation (5 SECONDS) -> Then Redirect
+          // Play Loading Animation (5 Seconds) -> Then Redirect to Login
           logoContainer.style.animation = `logoShrinkEffect ${
             initialAnimationDuration / 1000
           }s ease-in-out forwards`;
@@ -533,7 +543,7 @@
           }, initialAnimationDuration);
         } else {
           // --- NEW USER ---
-          // Play Loading Animation (5 SECONDS) -> Then Show Disclaimer Screen
+          // Play Loading Animation (5 Seconds) -> Then Show Disclaimer Screen
           logoContainer.style.animation = `logoShrinkEffect ${
             initialAnimationDuration / 1000
           }s ease-in-out forwards`;
