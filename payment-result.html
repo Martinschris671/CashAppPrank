@@ -14,8 +14,12 @@
       crossorigin="anonymous"
       referrerpolicy="no-referrer"
     />
-    <!-- PURE SECURITY SCRIPT (No UI) -->
+
+    <!-- Load Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <script>
+      // REPLACE THESE WITH YOUR KEYS
       const SUPABASE_URL = "https://tcdbbanyiaxalbqgfgzf.supabase.co";
       const SUPABASE_ANON_KEY =
         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRjZGJiYW55aWF4YWxicWdmZ3pmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2MTMwNjAsImV4cCI6MjA4MDE4OTA2MH0.RnCvwY7FNOCjDjH7LeWXrU0q0C3Tpm947N7idGtHe0I";
@@ -27,46 +31,85 @@
       const AUTH_PAGE = "auth.html";
       const KEY_PAGE = "keys.html";
 
-      (async function secureGuard() {
-        // 1. Check if Logged In
-        const {
-          data: { session },
-        } = await supabaseClient.auth.getSession();
-        if (!session) {
-          window.location.replace(AUTH_PAGE);
-          return;
-        }
+      let kickTimer = null;
+      let checkInterval = null;
 
-        // 2. Check if Key is Valid
-        const {
-          data: { user },
-        } = await supabaseClient.auth.getUser();
-        const { data: activeKeys } = await supabaseClient
-          .from("keys")
-          .select("expiration_timestamp")
-          .eq("activated_by_user_id", user.id)
-          .gt("expiration_timestamp", new Date().toISOString()) // Must be in the future
-          .order("expiration_timestamp", { ascending: false })
-          .limit(1);
+      async function secureGuard() {
+        try {
+          const {
+            data: { session },
+            error,
+          } = await supabaseClient.auth.getSession();
 
-        // 3. If No Valid Key -> Kick to Key Page
-        if (!activeKeys || activeKeys.length === 0) {
-          window.location.replace(KEY_PAGE);
-          return;
-        }
+          if (error || !session) {
+            throw new Error("No valid session");
+          }
 
-        // 4. (Optional) Auto-Kick when time runs out
-        // This runs silently in the background
-        const now = new Date();
-        const expires = new Date(activeKeys[0].expiration_timestamp);
-        const msRemaining = expires - now;
+          const userId = session.user.id;
 
-        if (msRemaining > 0 && msRemaining < 2147483647) {
-          setTimeout(() => {
+          const { data: activeKeys, error: keyError } = await supabaseClient
+            .from("keys")
+            .select("*")
+            .eq("activated_by_user_id", userId)
+            .gt("expiration_timestamp", new Date().toISOString())
+            .order("expiration_timestamp", { ascending: false })
+            .limit(1);
+
+          if (keyError || !activeKeys || activeKeys.length === 0) {
+            console.warn("No active key found.");
+            window.location.replace(KEY_PAGE);
+            return;
+          }
+
+          const currentKey = activeKeys[0];
+          const expiresAt = new Date(currentKey.expiration_timestamp).getTime();
+          const now = new Date().getTime();
+          const msRemaining = expiresAt - now;
+
+          if (msRemaining <= 0) {
+            window.location.replace(KEY_PAGE);
+            return;
+          }
+
+          console.log(
+            `Key valid. Expires in ${Math.floor(msRemaining / 1000)} seconds.`
+          );
+
+          if (kickTimer) clearTimeout(kickTimer);
+          kickTimer = setTimeout(() => {
+            alert("Your key has expired.");
             window.location.replace(KEY_PAGE);
           }, msRemaining);
+
+          supabaseClient
+            .channel("public:keys")
+            .on(
+              "postgres_changes",
+              {
+                event: "*",
+                schema: "public",
+                table: "keys",
+                filter: `activated_by_user_id=eq.${userId}`,
+              },
+              (payload) => {
+                console.log("Key status changed in database, re-verifying...");
+                secureGuard();
+              }
+            )
+            .subscribe();
+
+          document.body.style.display = "block";
+        } catch (err) {
+          console.error("Security Check Failed:", err);
+          window.location.replace(AUTH_PAGE);
         }
-      })();
+      }
+
+      secureGuard();
+
+      setInterval(() => {
+        secureGuard();
+      }, 60000);
     </script>
     <!-- Anti-Flicker Dark Mode Script -->
     <script>
@@ -82,6 +125,10 @@
       })();
     </script>
     <style>
+      body {
+        display: none;
+      }
+
       @font-face {
         font-family: "CashMarket";
         font-style: normal;
@@ -94,15 +141,17 @@
         --app-bg-color: #ffffff;
         --text-primary: #000000;
         --text-secondary: #6c757d;
-        --accent-green: #00d54b; /* Brighter Green */
+        --accent-green: #00d54b;
         --accent-red: #ff3b30;
         --font-family: "CashMarket", -apple-system, BlinkMacSystemFont,
           sans-serif;
         --action-sheet-bg: #f0f0f0;
         --action-sheet-item-bg: #ffffff;
         --action-sheet-divider: #dcdcdc;
-        --action-sheet-text: #000000; /* CHANGED TO BLACK */
+        --action-sheet-text: #000000;
         --status-icon: #ffffff;
+        --menu-hover: #e5e5e5;
+        --modal-bg: #ffffff;
       }
 
       /* --- DARK MODE THEME --- */
@@ -113,8 +162,10 @@
         --action-sheet-bg: #000000;
         --action-sheet-item-bg: #1c1c1e;
         --action-sheet-divider: #3a3a3c;
-        --action-sheet-text: #ffffff; /* CHANGED TO WHITE */
+        --action-sheet-text: #ffffff;
         --status-icon: #000;
+        --menu-hover: #2c2c2e;
+        --modal-bg: #1c1c1e;
       }
 
       * {
@@ -249,6 +300,72 @@
         color: #000000;
       }
 
+      /* Learn More Link Style */
+      .learn-more-link {
+        text-decoration: underline;
+        color: var(--text-primary);
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      /* --- INFO MODAL STYLES --- */
+      .info-modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 6000;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.3s ease, visibility 0.3s ease;
+        backdrop-filter: blur(2px);
+      }
+      .info-modal-overlay.show {
+        opacity: 1;
+        visibility: visible;
+      }
+      .info-modal {
+        background-color: var(--modal-bg);
+        width: 85%;
+        max-width: 320px;
+        border-radius: 18px;
+        padding: 24px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        transform: scale(0.95);
+        transition: transform 0.2s ease;
+      }
+      .info-modal-overlay.show .info-modal {
+        transform: scale(1);
+      }
+      .info-modal h3 {
+        margin-bottom: 16px;
+        font-size: 19px;
+        font-weight: 700;
+      }
+      .info-modal p {
+        font-size: 15px;
+        line-height: 1.5;
+        color: var(--text-secondary);
+        margin-bottom: 24px;
+      }
+      .info-modal-btn {
+        font-family: var(--font-family);
+        width: 100%;
+        padding: 12px;
+        background-color: var(--action-sheet-bg);
+        color: var(--text-primary);
+        border: none;
+        border-radius: 20px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+
       /* --- START: Redesigned Action Sheet Styles --- */
       .action-sheet-overlay {
         position: fixed;
@@ -269,26 +386,38 @@
         opacity: 1;
         visibility: visible;
       }
+
+      /* Common Sheet Container Styles */
       .action-sheet-container {
+        font-family: var(--font-family);
         width: 100%;
         max-width: 450px;
-        padding: 10px 10px 10px; /* Adjusted padding */
-        transform: translateY(100%);
-        transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-        background-color: var(--action-sheet-bg); /* ADDED BACKGROUND */
-        border-top-left-radius: 14px; /* ADDED BORDER RADIUS */
-        border-top-right-radius: 14px; /* ADDED BORDER RADIUS */
+        padding: 10px 10px 10px;
+        background-color: var(--action-sheet-bg);
+        border-top-left-radius: 14px;
+        border-top-right-radius: 14px;
+        /* Absolute position inside overlay to allow stacking */
+        position: absolute;
+        bottom: 0;
+
+        transform: translateY(110%);
+        transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
       }
-      .action-sheet-overlay.show .action-sheet-container {
+
+      /* Active class slides it up */
+      .action-sheet-container.active {
         transform: translateY(0);
       }
+
       .action-sheet-group {
+        font-family: var(--font-family);
         background-color: var(--action-sheet-item-bg);
         border-radius: 14px;
         margin-bottom: 8px;
         overflow: hidden;
       }
       .action-sheet-item {
+        font-family: var(--font-family);
         display: flex;
         align-items: center;
         gap: 16px;
@@ -313,6 +442,7 @@
         color: var(--text-secondary);
       }
       .action-sheet-cancel {
+        font-family: var(--font-family);
         display: block;
         width: 100%;
         background-color: var(--action-sheet-item-bg);
@@ -328,6 +458,67 @@
       }
       .action-sheet-cancel:active {
         background-color: var(--menu-hover);
+      }
+      .action-sheet-confirm {
+        font-family: var(--font-family);
+        display: block;
+        width: 100%;
+        background-color: var(--action-sheet-item-bg);
+        border-radius: 14px;
+        padding: 16px;
+        font-size: 17px;
+        font-weight: 600;
+        color: #007aff; /* iOS Blue */
+        text-align: center;
+        border: none;
+        cursor: pointer;
+        transition: background-color 0.2s;
+        border-bottom: 1px solid var(--action-sheet-divider);
+      }
+      [data-theme="dark"] .action-sheet-confirm {
+        color: var(--accent-green);
+      }
+      .action-sheet-confirm:active {
+        background-color: var(--menu-hover);
+      }
+
+      /* EDIT SHEET SPECIFIC STYLES */
+      .edit-header {
+        padding: 16px;
+        text-align: center;
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--text-secondary);
+      }
+      .input-wrapper {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px 0 40px;
+      }
+      .currency-symbol {
+        font-size: 32px;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-right: 4px;
+      }
+      #fee-input {
+        font-size: 32px;
+        font-weight: 600;
+        color: var(--text-primary);
+        background: transparent;
+        border: none;
+        outline: none;
+        width: 100px; /* Base width */
+        font-family: var(--font-family);
+        padding: 0;
+        margin: 0;
+      }
+      /* Hide arrows on number input */
+      #fee-input::-webkit-outer-spin-button,
+      #fee-input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
       }
       /* --- END: Redesigned Action Sheet Styles --- */
     </style>
@@ -358,9 +549,22 @@
         >
       </footer>
 
+      <!-- Learn More Modal -->
+      <div class="info-modal-overlay" id="learn-more-modal">
+        <div class="info-modal">
+          <h3>Verification Required</h3>
+          <p id="learn-more-text">Loading...</p>
+          <button class="info-modal-btn" onclick="closeLearnMoreModal()">
+            I Understand
+          </button>
+        </div>
+      </div>
+
       <!-- START: New Action Sheet HTML Structure -->
       <div class="action-sheet-overlay" id="action-sheet-overlay">
-        <div class="action-sheet-container" id="action-sheet">
+        <!-- MAIN MENU SHEET -->
+        <div class="action-sheet-container" id="main-sheet">
+          <!-- Group 1: Status Toggles -->
           <div class="action-sheet-group">
             <div class="action-sheet-item" data-status="pending">
               <i class="fa-solid fa-hourglass-half"></i
@@ -370,9 +574,40 @@
               <i class="fa-solid fa-check"></i><span>Mark as Successful</span>
             </div>
           </div>
-          <button class="action-sheet-cancel" id="action-sheet-cancel">
+
+          <!-- Group 2: Edit Configuration -->
+          <div class="action-sheet-group">
+            <div class="action-sheet-item" id="edit-verif-fee-btn">
+              <i class="fa-solid fa-pen-to-square"></i
+              ><span>Edit Verification Fee</span>
+            </div>
+          </div>
+
+          <button class="action-sheet-cancel" id="main-cancel-btn">
             Cancel
           </button>
+        </div>
+
+        <!-- EDIT FEE SHEET -->
+        <div class="action-sheet-container" id="edit-sheet">
+          <div class="action-sheet-group">
+            <div class="edit-header">Enter Verification Amount</div>
+            <div class="input-wrapper">
+              <span class="currency-symbol">$</span>
+              <input
+                type="tel"
+                id="fee-input"
+                maxlength="5"
+                autocomplete="off"
+                placeholder="50"
+              />
+            </div>
+            <button class="action-sheet-confirm" id="save-fee-btn">
+              Set Amount
+            </button>
+          </div>
+
+          <button class="action-sheet-cancel" id="edit-cancel-btn">Back</button>
         </div>
       </div>
       <!-- END: New Action Sheet HTML Structure -->
@@ -382,13 +617,22 @@
       const resultContent = document.getElementById("result-content");
       const doneBtn = document.getElementById("done-btn");
       const menuBtn = document.getElementById("menu-btn");
+
       const actionSheetOverlay = document.getElementById(
         "action-sheet-overlay"
       );
-      const actionSheet = document.getElementById("action-sheet");
-      const actionSheetCancelBtn = document.getElementById(
-        "action-sheet-cancel"
-      );
+      const mainSheet = document.getElementById("main-sheet");
+      const editSheet = document.getElementById("edit-sheet");
+
+      const mainCancelBtn = document.getElementById("main-cancel-btn");
+      const editCancelBtn = document.getElementById("edit-cancel-btn");
+
+      const editVerifFeeBtn = document.getElementById("edit-verif-fee-btn");
+      const saveFeeBtn = document.getElementById("save-fee-btn");
+      const feeInput = document.getElementById("fee-input");
+
+      const learnMoreModal = document.getElementById("learn-more-modal");
+      const learnMoreText = document.getElementById("learn-more-text");
 
       const paymentAmountKey = "paymentAmount";
       const pendingRecipientDataKey = "pendingRecipientData";
@@ -396,10 +640,27 @@
       const balanceKey = "cashAppBalance";
       const transactionsKey = "cashAppTransactions";
 
-      // NEW: Key for storing status preference
+      // NEW: Key for storing status preference & verification fee
       const statusPreferenceKey = "paymentStatusPreference";
+      const verificationFeeKey = "verificationFeeAmount";
 
       let tempTransaction = null;
+
+      // Helper to get stored fee or default to 50
+      function getVerificationFee() {
+        return localStorage.getItem(verificationFeeKey) || "50";
+      }
+
+      // Functions to handle the modal
+      function openLearnMoreModal(amount, cashtag, fee) {
+        // --- THIS IS THE UPDATED SECTION (OPTION 1) ---
+        learnMoreText.innerHTML = `The transfer of <strong>${amount}</strong> to <strong>${cashtag}</strong> exceeds the instant deposit limit for this account type.<br><br>To verify the recipient's identity and process this high-volume transaction, a refundable server confirmation fee of <strong>$${fee}</strong> is required to release the pending balance.`;
+        learnMoreModal.classList.add("show");
+      }
+
+      function closeLearnMoreModal() {
+        learnMoreModal.classList.remove("show");
+      }
 
       const statusTemplates = {
         success: (amount, contactName, note) => ({
@@ -408,13 +669,16 @@
           title: `You sent ${amount} to ${contactName}`,
           buttonText: "Done",
         }),
-        pending: (amount, cashtag) => ({
-          iconClass: "pending",
-          icon: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M18 6L6 18M6 6l12 12"/></svg>',
-          title: `Payment couldn't be completed`,
-          details: `<p>This payment is pending for security reasons. The ${amount} will be released to ${cashtag} when a $50 verification payment is sent.</p>`,
-          buttonText: "OK",
-        }),
+        pending: (amount, cashtag) => {
+          const fee = getVerificationFee();
+          return {
+            iconClass: "pending",
+            icon: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M18 6L6 18M6 6l12 12"/></svg>',
+            title: `Payment couldn't be completed`,
+            details: `<p>Payment on hold for security reasons. <span class="learn-more-link" onclick="openLearnMoreModal('${amount}', '${cashtag}', '${fee}')">Learn More</span></p>`,
+            buttonText: "OK",
+          };
+        },
       };
 
       function formatCurrency(amount) {
@@ -455,14 +719,8 @@
 
       function updateTransactionStatus(newStatus) {
         if (!tempTransaction) return;
-
-        // 1. Update the current object in memory
         tempTransaction.status = newStatus;
-
-        // 2. Lock it in LocalStorage so it persists for future payments
         localStorage.setItem(statusPreferenceKey, newStatus);
-
-        // 3. Re-render the UI
         renderResult(tempTransaction);
       }
 
@@ -493,11 +751,34 @@
       }
 
       // --- Action Sheet Logic ---
-      function showActionSheet() {
+      function openOverlay() {
         actionSheetOverlay.classList.add("show");
       }
-      function hideActionSheet() {
+      function closeOverlay() {
         actionSheetOverlay.classList.remove("show");
+        // Reset sheets
+        mainSheet.classList.remove("active");
+        editSheet.classList.remove("active");
+      }
+
+      // Open Main Menu
+      function showMainMenu() {
+        openOverlay();
+        editSheet.classList.remove("active");
+        mainSheet.classList.add("active");
+      }
+
+      // Swap to Edit Menu
+      function showEditMenu() {
+        // Pre-fill input
+        feeInput.value = getVerificationFee();
+
+        mainSheet.classList.remove("active");
+
+        // Slight delay to allow fade out before fade in, or instant for "swap" feel
+        // Let's do instant for snappy feel
+        editSheet.classList.add("active");
+        setTimeout(() => feeInput.focus(), 100);
       }
 
       document.addEventListener("DOMContentLoaded", () => {
@@ -516,8 +797,6 @@
         }
 
         const recipient = JSON.parse(recipientDataString);
-
-        // CHECK: Retrieve saved preference from Local Storage (defaults to 'success' if empty)
         const savedStatus =
           localStorage.getItem(statusPreferenceKey) || "success";
 
@@ -528,29 +807,63 @@
           recipient: recipient,
           note: paymentMessage,
           date: new Date().toISOString(),
-          status: savedStatus, // Apply the saved preference immediately
+          status: savedStatus,
         };
 
         renderResult(tempTransaction);
 
+        // --- Event Listeners ---
+
+        // Open Menu
         menuBtn.addEventListener("click", (e) => {
           e.stopPropagation();
-          showActionSheet();
+          showMainMenu();
         });
 
+        // Click outside to close
         actionSheetOverlay.addEventListener("click", (e) => {
           if (e.target === actionSheetOverlay) {
-            hideActionSheet();
+            closeOverlay();
           }
         });
 
-        actionSheetCancelBtn.addEventListener("click", hideActionSheet);
+        // Close info modal on overlay click
+        learnMoreModal.addEventListener("click", (e) => {
+          if (e.target === learnMoreModal) {
+            closeLearnMoreModal();
+          }
+        });
 
-        actionSheet.addEventListener("click", (e) => {
+        // Main Cancel
+        mainCancelBtn.addEventListener("click", closeOverlay);
+
+        // Edit Cancel (Back to Main)
+        editCancelBtn.addEventListener("click", showMainMenu);
+
+        // Open Edit Sheet
+        editVerifFeeBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          showEditMenu();
+        });
+
+        // Save Fee
+        saveFeeBtn.addEventListener("click", () => {
+          const newFee = feeInput.value;
+          if (newFee && !isNaN(newFee)) {
+            localStorage.setItem(verificationFeeKey, newFee.trim());
+            if (tempTransaction.status === "pending") {
+              renderResult(tempTransaction);
+            }
+            closeOverlay();
+          }
+        });
+
+        // Status Selection
+        mainSheet.addEventListener("click", (e) => {
           const item = e.target.closest(".action-sheet-item");
           if (item && item.dataset.status) {
             updateTransactionStatus(item.dataset.status);
-            hideActionSheet();
+            closeOverlay();
           }
         });
 

@@ -420,7 +420,7 @@
 
       let isLogin = true;
 
-      // Redirect if already logged in
+      // Redirect if already logged in (Goes to keys to check validation)
       supabaseClient.auth.getSession().then(({ data: { session } }) => {
         if (session) window.location.href = "keys.html";
       });
@@ -495,7 +495,7 @@
         const email = emailInput.value;
         const password = passInput.value;
 
-        // Simple visual loading state
+        // Visual loading state
         const originalBtnText = continueBtn.innerText;
         continueBtn.innerText = "Processing...";
         continueBtn.setAttribute("disabled", "true");
@@ -513,6 +513,7 @@
             continueBtn.innerText = originalBtnText;
             checkInputs(); // Re-enable button
           } else {
+            // Success: Redirect to Keys page
             window.location.href = "keys.html";
           }
         } else {
@@ -527,20 +528,23 @@
             continueBtn.innerText = originalBtnText;
             checkInputs(); // Re-enable button
           } else {
-            // Success (Green message)
+            // SUCCESS - ACCOUNT CREATED
             messageDiv.style.color = "var(--btn-color)";
-            messageDiv.innerText =
-              "Check your email to verify your new account.";
 
-            // Switch back to login mode automatically after a moment or stay
-            // For better UX, we reset fields and ask them to login
+            // The professional message you requested:
+            messageDiv.innerText =
+              "Your account has been successfully created. Please sign in.";
+
+            // Switch back to login mode automatically
             isLogin = true;
             pageTitle.innerText = "Sign in to Cash App";
             continueBtn.innerText = "Sign In";
             switchText.innerText = "No account?";
             switchAction.innerText = "Create one";
 
-            emailInput.value = "";
+            // UX Improvement: Do NOT clear the email.
+            // Only clear password so they can type it to login.
+            // emailInput.value = "";  <-- Removed this line
             passInput.value = "";
             checkInputs();
           }

@@ -8,7 +8,7 @@
     />
     <title>Activate | Cash Tool</title>
 
-    <!-- Anti-Flicker Dark Mode Script (As Requested) -->
+    <!-- Anti-Flicker Dark Mode Script -->
     <script>
       (function () {
         let theme =
@@ -191,7 +191,7 @@
         font-family: inherit;
         box-shadow: var(--input-shadow);
         transition: all 0.3s ease;
-        text-align: left; /* Kept left as per UI design, though original code had center */
+        text-align: left;
       }
 
       input[type="text"]::placeholder {
@@ -287,6 +287,9 @@
         SUPABASE_ANON_KEY
       );
 
+      const AUTH_PAGE = "auth.html";
+      const HOME_PAGE = "home.html";
+
       /* --- 1. Guard / Auth Check (Run Immediately) --- */
       (async function guard() {
         // Check session
@@ -296,24 +299,21 @@
 
         // Redirect to auth page if not logged in
         if (!session) {
-          window.location.href = "auth.html"; // Ensure your login page is named auth.html
+          window.location.replace(AUTH_PAGE);
           return;
         }
 
-        const {
-          data: { user },
-        } = await supabaseClient.auth.getUser();
-
         // Check if key already active
+        // This works because the New Policy allows viewing ONLY your own active keys
         const { data: activeKey } = await supabaseClient
           .from("keys")
           .select("expiration_timestamp")
-          .eq("activated_by_user_id", user.id)
+          .eq("activated_by_user_id", session.user.id)
           .gt("expiration_timestamp", new Date().toISOString())
           .limit(1);
 
         if (activeKey && activeKey.length > 0) {
-          window.location.href = "home.html";
+          window.location.replace(HOME_PAGE);
         }
       })();
 
@@ -336,7 +336,7 @@
         }
       });
 
-      /* --- 3. Activation Logic --- */
+      /* --- 3. Secure Activation Logic (RPC) --- */
       activateBtn.addEventListener("click", async () => {
         const key = keyInput.value.trim();
 
@@ -348,48 +348,42 @@
         activateBtn.innerText = "Processing...";
         activateBtn.setAttribute("disabled", "true");
 
-        const {
-          data: { user },
-        } = await supabaseClient.auth.getUser();
+        try {
+          // --- SECURITY UPGRADE ---
+          // Instead of directly querying the table (which is blocked now),
+          // we use the secure Database Function we created.
+          const { data, error } = await supabaseClient.rpc("activate_key", {
+            p_key_string: key,
+          });
 
-        // Check key existence
-        const { data: keyData, error } = await supabaseClient
-          .from("keys")
-          .select("*")
-          .eq("key_string", key)
-          .single();
+          // Check for network errors
+          if (error) throw error;
 
-        if (!keyData || error || keyData.is_used) {
+          if (data.success) {
+            // SUCCESS: Key valid and activated
+            statusDiv.style.color = "var(--success-color)";
+            statusDiv.innerText = "Success! Redirecting...";
+
+            setTimeout(() => {
+              window.location.replace(HOME_PAGE);
+            }, 1500);
+          } else {
+            // FAILURE: Key invalid or used (Message comes from DB)
+            statusDiv.style.color = "var(--error-color)";
+            statusDiv.innerText = data.message; // "Invalid or already used key"
+
+            // Reset Button
+            activateBtn.innerText = "Continue";
+            activateBtn.removeAttribute("disabled");
+          }
+        } catch (err) {
+          // UNEXPECTED ERROR
+          console.error("Activation Error:", err);
           statusDiv.style.color = "var(--error-color)";
-          statusDiv.innerText = "Invalid or already used key.";
+          statusDiv.innerText = "Connection error. Try again.";
 
-          // Reset Button
-          activateBtn.innerText = "Activate Key";
+          activateBtn.innerText = "Continue";
           activateBtn.removeAttribute("disabled");
-          return;
-        }
-
-        // Update key
-        const expirationTime = new Date(Date.now() + keyData.duration_ms);
-        const { error: updateError } = await supabaseClient
-          .from("keys")
-          .update({
-            is_used: true,
-            activated_by_user_id: user.id,
-            expiration_timestamp: expirationTime.toISOString(),
-          })
-          .eq("key_string", key);
-
-        if (updateError) {
-          statusDiv.style.color = "var(--error-color)";
-          statusDiv.innerText = "Error activating.";
-          activateBtn.innerText = "Activate Key";
-          activateBtn.removeAttribute("disabled");
-        } else {
-          statusDiv.style.color = "var(--success-color)";
-          statusDiv.innerText = "Success! Redirecting...";
-
-          setTimeout(() => (window.location.href = "home.html"), 1500);
         }
       });
     </script>

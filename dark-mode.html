@@ -4,11 +4,13 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Theme Settings</title>
-     <!-- PURE SECURITY SCRIPT (No UI) -->
+     <!-- Load Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <script>
+      // REPLACE THESE WITH YOUR KEYS
       const SUPABASE_URL = "https://tcdbbanyiaxalbqgfgzf.supabase.co";
-      const SUPABASE_ANON_KEY =
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRjZGJiYW55aWF4YWxicWdmZ3pmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2MTMwNjAsImV4cCI6MjA4MDE4OTA2MH0.RnCvwY7FNOCjDjH7LeWXrU0q0C3Tpm947N7idGtHe0I";
+      const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRjZGJiYW55aWF4YWxicWdmZ3pmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2MTMwNjAsImV4cCI6MjA4MDE4OTA2MH0.RnCvwY7FNOCjDjH7LeWXrU0q0C3Tpm947N7idGtHe0I";
 
       const supabaseClient = supabase.createClient(
         SUPABASE_URL,
@@ -17,46 +19,95 @@
       const AUTH_PAGE = "auth.html";
       const KEY_PAGE = "keys.html";
 
-      (async function secureGuard() {
-        // 1. Check if Logged In
-        const {
-          data: { session },
-        } = await supabaseClient.auth.getSession();
-        if (!session) {
-          window.location.replace(AUTH_PAGE);
-          return;
-        }
+      let kickTimer = null;
+      let checkInterval = null;
 
-        // 2. Check if Key is Valid
-        const {
-          data: { user },
-        } = await supabaseClient.auth.getUser();
-        const { data: activeKeys } = await supabaseClient
-          .from("keys")
-          .select("expiration_timestamp")
-          .eq("activated_by_user_id", user.id)
-          .gt("expiration_timestamp", new Date().toISOString()) // Must be in the future
-          .order("expiration_timestamp", { ascending: false })
-          .limit(1);
+      async function secureGuard() {
+        try {
+          // 1. Check Session
+          const {
+            data: { session },
+            error,
+          } = await supabaseClient.auth.getSession();
 
-        // 3. If No Valid Key -> Kick to Key Page
-        if (!activeKeys || activeKeys.length === 0) {
-          window.location.replace(KEY_PAGE);
-          return;
-        }
+          if (error || !session) {
+            throw new Error("No valid session");
+          }
 
-        // 4. (Optional) Auto-Kick when time runs out
-        // This runs silently in the background
-        const now = new Date();
-        const expires = new Date(activeKeys[0].expiration_timestamp);
-        const msRemaining = expires - now;
+          const userId = session.user.id;
 
-        if (msRemaining > 0 && msRemaining < 2147483647) {
-          setTimeout(() => {
+          // 2. Check for Valid Key
+          // We fetch the latest key that hasn't expired yet
+          const { data: activeKeys, error: keyError } = await supabaseClient
+            .from("keys")
+            .select("*")
+            .eq("activated_by_user_id", userId)
+            .gt("expiration_timestamp", new Date().toISOString())
+            .order("expiration_timestamp", { ascending: false })
+            .limit(1);
+
+          if (keyError || !activeKeys || activeKeys.length === 0) {
+            console.warn("No active key found.");
+            window.location.replace(KEY_PAGE);
+            return;
+          }
+
+          const currentKey = activeKeys[0];
+          const expiresAt = new Date(currentKey.expiration_timestamp).getTime();
+          const now = new Date().getTime();
+          const msRemaining = expiresAt - now;
+
+          // 3. Setup Auto-Kick Timer (Exact Expiration)
+          if (msRemaining <= 0) {
+            window.location.replace(KEY_PAGE);
+            return;
+          }
+
+          console.log(
+            `Key valid. Expires in ${Math.floor(msRemaining / 1000)} seconds.`
+          );
+
+          // Set the "Time's up" redirection
+          if (kickTimer) clearTimeout(kickTimer);
+          kickTimer = setTimeout(() => {
+            alert("Your key has expired.");
             window.location.replace(KEY_PAGE);
           }, msRemaining);
+
+          // 4. Setup Real-Time Security (If you revoke key in DB, they get kicked instantly)
+          supabaseClient
+            .channel("public:keys")
+            .on(
+              "postgres_changes",
+              {
+                event: "*",
+                schema: "public",
+                table: "keys",
+                filter: `activated_by_user_id=eq.${userId}`,
+              },
+              (payload) => {
+                // If the key is deleted or updated to be expired, re-run guard
+                console.log("Key status changed in database, re-verifying...");
+                secureGuard();
+              }
+            )
+            .subscribe();
+
+          // 5. SUCCESS: Reveal the Page
+          document.body.style.display = "block";
+        } catch (err) {
+          console.error("Security Check Failed:", err);
+          window.location.replace(AUTH_PAGE);
         }
-      })();
+      }
+
+      // Run immediately
+      secureGuard();
+
+      // Double check every 60 seconds (In case user changes system clock)
+      setInterval(() => {
+        secureGuard();
+      }, 60000);
     </script>
     <style>
       /* --- 1. FONTS & BASIC SETUP --- */
@@ -92,7 +143,9 @@
         /* It drives the entire theme system */
         color-scheme: light dark;
       }
-
+body{
+  display: none;
+}
       body {
         font-family: "Roboto Mono", monospace;
         background-color: var(--bg-color);
