@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -50,7 +50,7 @@
         --btn-text: #ffffff;
       }
 
-      /* --- LIGHT MODE OVERRIDES (ADDED THIS BACK) --- */
+      /* --- LIGHT MODE OVERRIDES --- */
       [data-theme="light"] {
         --bg-color: #ffffff;
         --text-primary: #000000;
@@ -71,12 +71,21 @@
       body {
         height: 100%;
         width: 100%;
-        font-family: "CashMarketR", -apple-system, BlinkMacSystemFont,
-          "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        font-family:
+          "CashMarketR",
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          Roboto,
+          Helvetica,
+          Arial,
+          sans-serif;
         background-color: var(--bg-color); /* Defaults to Dark for the app */
         overflow: hidden;
         position: relative;
-        transition: background-color 0.3s ease, color 0.3s ease;
+        transition:
+          background-color 0.3s ease,
+          color 0.3s ease;
       }
 
       /* =========================================
@@ -298,8 +307,15 @@
       }
 
       .continue-btn {
-        font-family: "CashMarketR", -apple-system, BlinkMacSystemFont,
-          "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        font-family:
+          "CashMarketR",
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          Roboto,
+          Helvetica,
+          Arial,
+          sans-serif;
         width: 100%;
         background-color: var(--btn-color);
         color: var(--btn-text);
@@ -419,13 +435,14 @@
     </div>
 
     <script>
-      // --- SUPABASE CONFIGURATION ---
+      // --- SUPABASE CONFIGURATION (NEW CREDENTIALS) ---
       const SUPABASE_URL = "https://tcdbbanyiaxalbqgfgzf.supabase.co";
       const SUPABASE_ANON_KEY =
         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRjZGJiYW55aWF4YWxicWdmZ3pmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2MTMwNjAsImV4cCI6MjA4MDE4OTA2MH0.RnCvwY7FNOCjDjH7LeWXrU0q0C3Tpm947N7idGtHe0I";
+
       const supabaseClient = supabase.createClient(
         SUPABASE_URL,
-        SUPABASE_ANON_KEY
+        SUPABASE_ANON_KEY,
       );
 
       // --- CHECK FUNCTION ---
@@ -441,6 +458,7 @@
           const {
             data: { user },
           } = await supabaseClient.auth.getUser();
+
           const { data: activeKeys } = await supabaseClient
             .from("keys")
             .select("expiration_timestamp")
@@ -469,7 +487,9 @@
         const initialAnimationDuration = 5000; // 5 Seconds
         const nextPageUrl = "auth.html";
         const toolPageUrl = "home.html";
-        const storageKey = "hasClickedGetStarted_CashAppV2_Final";
+
+        // UPDATED STORAGE KEY FOR V3
+        const storageKey = "hasClickedGetStarted_CashAppV3";
 
         // ==========================================
         // 1. DISCLAIMER INTERACTION LOGIC

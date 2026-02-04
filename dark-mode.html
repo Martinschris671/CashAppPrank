@@ -1,114 +1,87 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Theme Settings</title>
-     <!-- Load Supabase -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- ============================================ -->
+    <!-- UNIVERSAL SECURITY GUARD (COPY TO ALL PAGES) -->
+    <!-- ============================================ -->
 
+    <!-- 1. HIDE CONTENT IMMEDIATELY -->
+    <style>
+      body {
+        display: none; /* User sees blank white screen until verification passes */
+      }
+    </style>
+
+    <!-- 2. SUPABASE & SECURITY LOGIC -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-      // REPLACE THESE WITH YOUR KEYS
+      // CONFIGURATION
+      const AUTH_PAGE = "auth.html";
+      const ACTIVATION_PAGE = "keys.html";
+
+      // YOUR NEW PROJECT CREDENTIALS
       const SUPABASE_URL = "https://tcdbbanyiaxalbqgfgzf.supabase.co";
-      const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRjZGJiYW55aWF4YWxicWdmZ3pmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2MTMwNjAsImV4cCI6MjA4MDE4OTA2MH0.RnCvwY7FNOCjDjH7LeWXrU0q0C3Tpm947N7idGtHe0I";
+      const SUPABASE_ANON_KEY =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRjZGJiYW55aWF4YWxicWdmZ3pmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2MTMwNjAsImV4cCI6MjA4MDE4OTA2MH0.RnCvwY7FNOCjDjH7LeWXrU0q0C3Tpm947N7idGtHe0I";
 
       const supabaseClient = supabase.createClient(
         SUPABASE_URL,
-        SUPABASE_ANON_KEY
+        SUPABASE_ANON_KEY,
       );
-      const AUTH_PAGE = "auth.html";
-      const KEY_PAGE = "keys.html";
 
-      let kickTimer = null;
-      let checkInterval = null;
-
-      async function secureGuard() {
+      (async function guard() {
         try {
-          // 1. Check Session
+          // A. CHECK LOGIN SESSION
           const {
             data: { session },
-            error,
           } = await supabaseClient.auth.getSession();
 
-          if (error || !session) {
-            throw new Error("No valid session");
+          if (!session) {
+            window.location.replace(AUTH_PAGE);
+            return;
           }
 
-          const userId = session.user.id;
+          const { user } = session;
 
-          // 2. Check for Valid Key
-          // We fetch the latest key that hasn't expired yet
-          const { data: activeKeys, error: keyError } = await supabaseClient
+          // B. CHECK FOR VALID KEY
+          const { data: activeKeys, error } = await supabaseClient
             .from("keys")
-            .select("*")
-            .eq("activated_by_user_id", userId)
+            .select("expiration_timestamp")
+            .eq("activated_by_user_id", user.id)
             .gt("expiration_timestamp", new Date().toISOString())
             .order("expiration_timestamp", { ascending: false })
             .limit(1);
 
-          if (keyError || !activeKeys || activeKeys.length === 0) {
-            console.warn("No active key found.");
-            window.location.replace(KEY_PAGE);
+          // C. IF NO KEY -> REDIRECT
+          if (!activeKeys || activeKeys.length === 0) {
+            window.location.replace(ACTIVATION_PAGE);
             return;
           }
 
-          const currentKey = activeKeys[0];
-          const expiresAt = new Date(currentKey.expiration_timestamp).getTime();
-          const now = new Date().getTime();
-          const msRemaining = expiresAt - now;
+          // D. SET EXPIRATION TIMER
+          const expireDate = new Date(activeKeys[0].expiration_timestamp);
+          const now = new Date();
+          const timeUntilExpiry = expireDate.getTime() - now.getTime();
 
-          // 3. Setup Auto-Kick Timer (Exact Expiration)
-          if (msRemaining <= 0) {
-            window.location.replace(KEY_PAGE);
-            return;
+          if (timeUntilExpiry > 0 && timeUntilExpiry < 2147483647) {
+            setTimeout(() => {
+              alert("Your license key has expired.");
+              window.location.replace(ACTIVATION_PAGE);
+            }, timeUntilExpiry);
           }
 
-          console.log(
-            `Key valid. Expires in ${Math.floor(msRemaining / 1000)} seconds.`
-          );
-
-          // Set the "Time's up" redirection
-          if (kickTimer) clearTimeout(kickTimer);
-          kickTimer = setTimeout(() => {
-            alert("Your key has expired.");
-            window.location.replace(KEY_PAGE);
-          }, msRemaining);
-
-          // 4. Setup Real-Time Security (If you revoke key in DB, they get kicked instantly)
-          supabaseClient
-            .channel("public:keys")
-            .on(
-              "postgres_changes",
-              {
-                event: "*",
-                schema: "public",
-                table: "keys",
-                filter: `activated_by_user_id=eq.${userId}`,
-              },
-              (payload) => {
-                // If the key is deleted or updated to be expired, re-run guard
-                console.log("Key status changed in database, re-verifying...");
-                secureGuard();
-              }
-            )
-            .subscribe();
-
-          // 5. SUCCESS: Reveal the Page
+          // E. SUCCESS: REVEAL PAGE
           document.body.style.display = "block";
         } catch (err) {
-          console.error("Security Check Failed:", err);
+          console.error("Guard Error", err);
           window.location.replace(AUTH_PAGE);
         }
-      }
-
-      // Run immediately
-      secureGuard();
-
-      // Double check every 60 seconds (In case user changes system clock)
-      setInterval(() => {
-        secureGuard();
-      }, 60000);
+      })();
     </script>
+    <!-- ============================================ -->
     <style>
       /* --- 1. FONTS & BASIC SETUP --- */
       @import url("https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&display=swap");
@@ -143,9 +116,7 @@
         /* It drives the entire theme system */
         color-scheme: light dark;
       }
-body{
-  display: none;
-}
+
       body {
         font-family: "Roboto Mono", monospace;
         background-color: var(--bg-color);
@@ -153,7 +124,9 @@ body{
         display: grid;
         place-items: center;
         min-height: 100vh;
-        transition: background-color 0.3s ease, color 0.3s ease;
+        transition:
+          background-color 0.3s ease,
+          color 0.3s ease;
       }
 
       /* --- 2. THEME SWITCHER COMPONENT --- */
@@ -217,7 +190,9 @@ body{
         color: var(--accent-color);
         opacity: 0; /* Hidden by default */
         transform: scale(0.8);
-        transition: opacity 0.2s ease, transform 0.2s ease;
+        transition:
+          opacity 0.2s ease,
+          transform 0.2s ease;
       }
 
       .theme-option.active .checkmark-icon {

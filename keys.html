@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -74,15 +74,24 @@
       }
 
       body {
-        font-family: "CashMarketR", -apple-system, BlinkMacSystemFont,
-          "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        font-family:
+          "CashMarketR",
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          Roboto,
+          Helvetica,
+          Arial,
+          sans-serif;
         background-color: var(--bg-color);
         color: var(--text-primary);
         height: 100vh;
         display: flex;
         flex-direction: column;
         overflow: hidden;
-        transition: background-color 0.3s ease, color 0.3s ease;
+        transition:
+          background-color 0.3s ease,
+          color 0.3s ease;
       }
 
       .app-container {
@@ -221,8 +230,15 @@
         cursor: pointer;
         transition: all 0.3s ease;
         text-align: center;
-        font-family: "CashMarketR", -apple-system, BlinkMacSystemFont,
-          "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        font-family:
+          "CashMarketR",
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          Roboto,
+          Helvetica,
+          Arial,
+          sans-serif;
       }
 
       /* Logic: Green BG stays, Text fades */
@@ -278,13 +294,15 @@
 
     <!-- SCRIPT SECTION -->
     <script>
+      // --- CONFIGURATION ---
+      // These keys must match your NEW CashApp Project
       const SUPABASE_URL = "https://tcdbbanyiaxalbqgfgzf.supabase.co";
       const SUPABASE_ANON_KEY =
         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRjZGJiYW55aWF4YWxicWdmZ3pmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2MTMwNjAsImV4cCI6MjA4MDE4OTA2MH0.RnCvwY7FNOCjDjH7LeWXrU0q0C3Tpm947N7idGtHe0I";
 
       const supabaseClient = supabase.createClient(
         SUPABASE_URL,
-        SUPABASE_ANON_KEY
+        SUPABASE_ANON_KEY,
       );
 
       const AUTH_PAGE = "auth.html";
@@ -292,22 +310,20 @@
 
       /* --- 1. Guard / Auth Check (Run Immediately) --- */
       (async function guard() {
-        // Check session
+        // A. Check if user is logged in
         const {
           data: { session },
         } = await supabaseClient.auth.getSession();
 
-        // Redirect to auth page if not logged in
         if (!session) {
           window.location.replace(AUTH_PAGE);
           return;
         }
 
-        // Check if key already active
-        // This works because the New Policy allows viewing ONLY your own active keys
+        // B. Check if user already has an ACTIVE key
         const { data: activeKey } = await supabaseClient
           .from("keys")
-          .select("expiration_timestamp")
+          .select("id")
           .eq("activated_by_user_id", session.user.id)
           .gt("expiration_timestamp", new Date().toISOString())
           .limit(1);
@@ -336,9 +352,9 @@
         }
       });
 
-      /* --- 3. Secure Activation Logic (RPC) --- */
+      /* --- 3. Activation Logic (Your "Previous Project" Method) --- */
       activateBtn.addEventListener("click", async () => {
-        const key = keyInput.value.trim();
+        const key = keyInput.value.trim().toUpperCase(); // Force uppercase for consistency
 
         if (!key) return;
 
@@ -349,39 +365,59 @@
         activateBtn.setAttribute("disabled", "true");
 
         try {
-          // --- SECURITY UPGRADE ---
-          // Instead of directly querying the table (which is blocked now),
-          // we use the secure Database Function we created.
-          const { data, error } = await supabaseClient.rpc("activate_key", {
-            p_key_string: key,
-          });
+          // Get current user again
+          const {
+            data: { user },
+          } = await supabaseClient.auth.getUser();
+          if (!user) throw new Error("Session expired. Please login again.");
 
-          // Check for network errors
-          if (error) throw error;
+          // Step 1: Fetch the Key Details
+          const { data: keyData, error: keyError } = await supabaseClient
+            .from("keys")
+            .select("*")
+            .eq("key_string", key)
+            .single();
 
-          if (data.success) {
-            // SUCCESS: Key valid and activated
-            statusDiv.style.color = "var(--success-color)";
-            statusDiv.innerText = "Success! Redirecting...";
-
-            setTimeout(() => {
-              window.location.replace(HOME_PAGE);
-            }, 1500);
-          } else {
-            // FAILURE: Key invalid or used (Message comes from DB)
-            statusDiv.style.color = "var(--error-color)";
-            statusDiv.innerText = data.message; // "Invalid or already used key"
-
-            // Reset Button
-            activateBtn.innerText = "Continue";
-            activateBtn.removeAttribute("disabled");
+          if (keyError || !keyData) {
+            throw new Error("Invalid serial key.");
           }
+
+          if (keyData.is_used) {
+            throw new Error("This key has already been used.");
+          }
+
+          // Step 2: Calculate New Expiration
+          const expiration = new Date(Date.now() + keyData.duration_ms);
+
+          // Step 3: Update the Key (Claim it)
+          const { error: updateError } = await supabaseClient
+            .from("keys")
+            .update({
+              is_used: true,
+              activated_by_user_id: user.id,
+              expiration_timestamp: expiration.toISOString(),
+            })
+            .eq("key_string", key); // We don't need 'is_used' here because the RLS policy handles it
+
+          if (updateError) {
+            console.error(updateError);
+            throw new Error("Could not activate key. It may be taken.");
+          }
+
+          // SUCCESS
+          statusDiv.style.color = "var(--success-color)";
+          statusDiv.innerText = "Success! Redirecting...";
+
+          setTimeout(() => {
+            window.location.replace(HOME_PAGE);
+          }, 1500);
         } catch (err) {
-          // UNEXPECTED ERROR
+          // FAILURE
           console.error("Activation Error:", err);
           statusDiv.style.color = "var(--error-color)";
-          statusDiv.innerText = "Connection error. Try again.";
+          statusDiv.innerText = err.message; // Shows "Invalid key" or "Already used"
 
+          // Reset Button
           activateBtn.innerText = "Continue";
           activateBtn.removeAttribute("disabled");
         }
