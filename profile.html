@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -7,10 +7,10 @@
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
     <title>Profile - Cash App</title>
-  <!-- ============================================ -->
+    <!-- ============================================ -->
     <!-- UNIVERSAL SECURITY GUARD (COPY TO ALL PAGES) -->
     <!-- ============================================ -->
-    
+
     <!-- 1. HIDE CONTENT IMMEDIATELY -->
     <style>
       body {
@@ -22,8 +22,8 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
       // CONFIGURATION
-      const AUTH_PAGE = "auth.html"; 
-      const ACTIVATION_PAGE = "keys.html"; 
+      const AUTH_PAGE = "auth.html";
+      const ACTIVATION_PAGE = "keys.html";
 
       // YOUR NEW PROJECT CREDENTIALS
       const SUPABASE_URL = "https://tcdbbanyiaxalbqgfgzf.supabase.co";
@@ -37,50 +37,64 @@
 
       (async function guard() {
         try {
-            // A. CHECK LOGIN SESSION
-            const { data: { session } } = await supabaseClient.auth.getSession();
+          // A. CHECK LOGIN SESSION
+          const {
+            data: { session },
+          } = await supabaseClient.auth.getSession();
 
-            if (!session) {
-                window.location.replace(AUTH_PAGE);
-                return;
-            }
+          if (!session) {
+            window.location.replace(AUTH_PAGE);
+            return;
+          }
 
-            const { user } = session;
+          const { user } = session;
 
-            // B. CHECK FOR VALID KEY
-            const { data: activeKeys, error } = await supabaseClient
+          // B. CHECK FOR VALID KEY
+          const { data: activeKeys, error } = await supabaseClient
             .from("keys")
             .select("expiration_timestamp")
             .eq("activated_by_user_id", user.id)
-            .gt("expiration_timestamp", new Date().toISOString()) 
-            .order("expiration_timestamp", { ascending: false }) 
+            .gt("expiration_timestamp", new Date().toISOString())
+            .order("expiration_timestamp", { ascending: false })
             .limit(1);
 
-            // C. IF NO KEY -> REDIRECT
-            if (!activeKeys || activeKeys.length === 0) {
-                window.location.replace(ACTIVATION_PAGE);
-                return;
-            }
+          // C. IF NO KEY -> REDIRECT
+          if (!activeKeys || activeKeys.length === 0) {
+            window.location.replace(ACTIVATION_PAGE);
+            return;
+          }
 
-            // D. SET EXPIRATION TIMER
-            const expireDate = new Date(activeKeys[0].expiration_timestamp);
-            const now = new Date();
-            const timeUntilExpiry = expireDate.getTime() - now.getTime();
+          // D. SET EXPIRATION TIMER
+          const expireDate = new Date(activeKeys[0].expiration_timestamp);
+          const now = new Date();
+          const timeUntilExpiry = expireDate.getTime() - now.getTime();
 
-            if (timeUntilExpiry > 0 && timeUntilExpiry < 2147483647) {
-                setTimeout(() => {
-                    alert("Your license key has expired.");
-                    window.location.replace(ACTIVATION_PAGE);
-                }, timeUntilExpiry);
-            }
+          if (timeUntilExpiry > 0 && timeUntilExpiry < 2147483647) {
+            setTimeout(() => {
+              alert("Your license key has expired.");
+              window.location.replace(ACTIVATION_PAGE);
+            }, timeUntilExpiry);
+          }
 
-            // E. SUCCESS: REVEAL PAGE
-            document.body.style.display = "block";
-            
+          // E. SUCCESS: REVEAL PAGE
+          document.body.style.display = "block";
         } catch (err) {
-            console.error("Guard Error", err);
-            window.location.replace(AUTH_PAGE);
+          console.error("Guard Error", err);
+          window.location.replace(AUTH_PAGE);
         }
+      })();
+    </script>
+    <!-- Anti-Flicker Dark Mode Script -->
+    <script>
+      (function () {
+        let theme =
+          window.localStorage.getItem("app-theme-preference") || "system";
+        if (theme === "system") {
+          theme = window.matchMedia("(prefers-color-scheme: dark)").matches
+            ? "dark"
+            : "light";
+        }
+        document.documentElement.setAttribute("data-theme", theme);
       })();
     </script>
     <!-- ============================================ -->
@@ -94,8 +108,8 @@
         --divider-color: #e5e5e5;
         --chevron-color: #8e8e93;
         --green-accent: #00d54b;
-        --font-family: "CashMarket", -apple-system, BlinkMacSystemFont,
-          sans-serif;
+        --font-family:
+          "CashMarket", -apple-system, BlinkMacSystemFont, sans-serif;
       }
 
       /* Dark Mode Variables */
@@ -107,8 +121,6 @@
         --divider-color: #29292b;
         --chevron-color: #8e8e93;
       }
-
-    
 
       *,
       *::before,
@@ -404,7 +416,9 @@
         border-radius: 8px;
         font-size: 16px;
         font-family: inherit;
-        transition: border-color 0.2s, box-shadow 0.2s;
+        transition:
+          border-color 0.2s,
+          box-shadow 0.2s;
         background-color: var(--background-main);
         color: var(--primary-text);
       }
@@ -935,7 +949,7 @@
       const mainCashtag = document.getElementById("main-cashtag");
       const personalBtn = document.getElementById("personal-btn");
       const personalEditOverlay = document.getElementById(
-        "personal-edit-overlay"
+        "personal-edit-overlay",
       );
       const editBackBtn = document.getElementById("edit-back-btn");
       const editDoneBtn = document.getElementById("edit-done-btn");
@@ -947,10 +961,10 @@
       const editRoutingNumber = document.getElementById("edit-routing-number");
       const changePhotoLink = document.querySelector(".change-photo-link");
       const mainProfilePicContainer = document.getElementById(
-        "main-profile-picture-container"
+        "main-profile-picture-container",
       );
       const mainCashtagContainer = document.getElementById(
-        "main-cashtag-container"
+        "main-cashtag-container",
       );
 
       function generateInitialAvatar(name) {
@@ -991,7 +1005,7 @@
         let cashtag = "alexmorgan";
         try {
           const response = await fetch(
-            "https://randomuser.me/api/?nat=us,gb,ca"
+            "https://randomuser.me/api/?nat=us,gb,ca",
           );
           if (!response.ok) throw new Error("API fetch failed");
           const data = await response.json();
@@ -1024,7 +1038,7 @@
         };
         localStorage.setItem(
           globalProfileKey,
-          JSON.stringify(globalProfileData)
+          JSON.stringify(globalProfileData),
         );
       }
 
@@ -1094,7 +1108,7 @@
         (input) =>
           input.addEventListener("input", () => {
             editDoneBtn.disabled = false;
-          })
+          }),
       );
 
       editFullName.addEventListener("input", () => {
