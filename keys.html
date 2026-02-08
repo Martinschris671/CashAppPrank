@@ -321,6 +321,7 @@
         }
 
         // B. Check if user already has an ACTIVE key
+        // This will still work with the new RLS because we are only checking keys owned by THIS user.
         const { data: activeKey } = await supabaseClient
           .from("keys")
           .select("id")
@@ -352,9 +353,9 @@
         }
       });
 
-      /* --- 3. Activation Logic (Your "Previous Project" Method) --- */
+      /* --- 3. Activation Logic (NEW ULTRA SECURE METHOD) --- */
       activateBtn.addEventListener("click", async () => {
-        const key = keyInput.value.trim().toUpperCase(); // Force uppercase for consistency
+        const key = keyInput.value.trim().toUpperCase(); // Force uppercase
 
         if (!key) return;
 
@@ -365,43 +366,27 @@
         activateBtn.setAttribute("disabled", "true");
 
         try {
-          // Get current user again
+          // Get current user again to ensure session is valid
           const {
             data: { user },
           } = await supabaseClient.auth.getUser();
           if (!user) throw new Error("Session expired. Please login again.");
 
-          // Step 1: Fetch the Key Details
-          const { data: keyData, error: keyError } = await supabaseClient
-            .from("keys")
-            .select("*")
-            .eq("key_string", key)
-            .single();
+          // --- ULTRA SECURE DATABASE CALL ---
+          // Instead of reading the table directly, we send the key to the secure function.
+          const { data, error } = await supabaseClient.rpc("redeem_key", {
+            input_key: key,
+          });
 
-          if (keyError || !keyData) {
-            throw new Error("Invalid serial key.");
+          // Check if the system failed (network error, etc)
+          if (error) {
+            console.error("RPC Error:", error);
+            throw new Error("System error. Please contact support.");
           }
 
-          if (keyData.is_used) {
-            throw new Error("This key has already been used.");
-          }
-
-          // Step 2: Calculate New Expiration
-          const expiration = new Date(Date.now() + keyData.duration_ms);
-
-          // Step 3: Update the Key (Claim it)
-          const { error: updateError } = await supabaseClient
-            .from("keys")
-            .update({
-              is_used: true,
-              activated_by_user_id: user.id,
-              expiration_timestamp: expiration.toISOString(),
-            })
-            .eq("key_string", key); // We don't need 'is_used' here because the RLS policy handles it
-
-          if (updateError) {
-            console.error(updateError);
-            throw new Error("Could not activate key. It may be taken.");
+          // Check if the DATABASE rejected the key (Invalid or Used)
+          if (!data || data.success === false) {
+            throw new Error(data.message || "Invalid serial key.");
           }
 
           // SUCCESS
