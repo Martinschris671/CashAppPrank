@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -73,15 +73,24 @@
       }
 
       body {
-        font-family: "CashMarketR", -apple-system, BlinkMacSystemFont,
-          "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        font-family:
+          "CashMarketR",
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          Roboto,
+          Helvetica,
+          Arial,
+          sans-serif;
         background-color: var(--bg-color);
         color: var(--text-primary);
         height: 100vh;
         display: flex;
         flex-direction: column;
         overflow: hidden;
-        transition: background-color 0.3s ease, color 0.3s ease;
+        transition:
+          background-color 0.3s ease,
+          color 0.3s ease;
       }
 
       .app-container {
@@ -278,8 +287,15 @@
         cursor: pointer;
         transition: all 0.3s ease;
         text-align: center;
-        font-family: "CashMarketR", -apple-system, BlinkMacSystemFont,
-          "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        font-family:
+          "CashMarketR",
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          Roboto,
+          Helvetica,
+          Arial,
+          sans-serif;
       }
 
       .continue-btn:disabled {
@@ -415,15 +431,14 @@
 
       const supabaseClient = supabase.createClient(
         SUPABASE_URL,
-        SUPABASE_ANON_KEY
+        SUPABASE_ANON_KEY,
       );
 
       let isLogin = true;
 
-      // Redirect if already logged in (Goes to keys to check validation)
-      supabaseClient.auth.getSession().then(({ data: { session } }) => {
-        if (session) window.location.href = "keys.html";
-      });
+      // NOTE: I removed the "Auto Redirect" here.
+      // This stops the infinite bouncing loop.
+      // Now, if you are sent back here, you just click "Sign In" and it works instantly.
 
       // Helper: Translate Raw Errors to User-Friendly Messages
       function getFriendlyErrorMessage(rawMessage) {
@@ -514,7 +529,8 @@
             checkInputs(); // Re-enable button
           } else {
             // Success: Redirect to Keys page
-            window.location.href = "keys.html";
+            // Using replace() prevents back-button loops
+            window.location.replace("keys.html");
           }
         } else {
           // SIGN UP
@@ -531,7 +547,6 @@
             // SUCCESS - ACCOUNT CREATED
             messageDiv.style.color = "var(--btn-color)";
 
-            // The professional message you requested:
             messageDiv.innerText =
               "Your account has been successfully created. Please sign in.";
 
@@ -542,9 +557,6 @@
             switchText.innerText = "No account?";
             switchAction.innerText = "Create one";
 
-            // UX Improvement: Do NOT clear the email.
-            // Only clear password so they can type it to login.
-            // emailInput.value = "";  <-- Removed this line
             passInput.value = "";
             checkInputs();
           }
