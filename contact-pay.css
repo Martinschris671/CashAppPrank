@@ -1,0 +1,632 @@
+@font-face {
+  font-family: "CashMarket";
+  font-style: normal;
+  src: url(font/CashSans-Regular.otf);
+  font-display: swap;
+}
+@font-face {
+  font-family: "CashMarketBold";
+  font-style: normal;
+  src: url(font/CashSans-bold.otf);
+  font-display: swap;
+}
+
+/* --- THEME COLOR DEFINITIONS --- */
+:root {
+  /* Light Mode Colors (Your Original Theme) */
+  --card-bg-color: #ffffff;
+  --page-bg: #ffffff;
+  --page-bg-secondary: #f9f9f9;
+  --text-primary: #000000;
+  --text-secondary: #6c757d;
+  --text-placeholder: #c7c7cc;
+  --border-color: #cfcfcf;
+  --accent-green: #00d54b;
+  --pay-btn-bg-inactive: #f2f2f7;
+  --pay-btn-text-inactive: #bcbcc0;
+  --pay-btn-bg-active: #000000;
+  --pay-btn-text-active: #ffffff;
+  --note-icon-bg: #e9e9e9;
+  --checkbox-border: #555555;
+  --modal-handle-bg: #d1d1d6;
+  --modal-border: #e5e5ea;
+}
+
+[data-theme="dark"] {
+  --card-bg-color: #1c1c1e;
+  /* Dark Mode Colors (From Image & Your Request) */
+  --page-bg: #020001;
+  --page-bg-secondary: #1c1c1e;
+  --text-primary: #e9e8e8;
+  --text-secondary: #8e8e93;
+  --text-placeholder: #8e8e93;
+  --border-color: #3a3a3c;
+  --accent-green: #00b23f;
+  --pay-btn-bg-inactive: #2c2c2e;
+  --pay-btn-text-inactive: #8e8e93;
+  --pay-btn-bg-active: #00b23f;
+  --pay-btn-text-active: #000;
+  --note-icon-bg: #2c2c2e;
+  --checkbox-border: #8e8e93;
+  --modal-handle-bg: #5a5a5c;
+  --modal-border: #3a3a3c;
+}
+/* --- END OF THEME DEFINITIONS --- */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+}
+body {
+  font-family:
+    "CashMarket",
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+  background-color: var(--page-bg);
+  color: var(--text-primary);
+  transition:
+    background-color 0.3s,
+    color 0.3s;
+}
+.container {
+  max-width: 420px;
+  margin: 0 auto;
+  height: 100%;
+  background-color: var(--page-bg);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  transition: background-color 0.3s;
+}
+.sticky-header-wrapper {
+  position: sticky;
+  top: 0;
+  background-color: var(--page-bg);
+  z-index: 10;
+  padding: 0 18px;
+  flex-shrink: 0;
+  transition: background-color 0.3s;
+}
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  position: relative;
+}
+
+.header::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background-color: var(--border-color);
+  transition: background-color 0.3s;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-primary);
+}
+.close-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+.amount {
+  font-size: 17px;
+  font-weight: 600;
+}
+.pay-btn {
+  background-color: var(--pay-btn-bg-inactive);
+  color: var(--pay-btn-text-inactive);
+  border: none;
+  padding: 6px 17px;
+  border-radius: 16px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: not-allowed;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+  font-family:
+    "CashMarket",
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+}
+.pay-btn.active {
+  background-color: var(--pay-btn-bg-active);
+  color: var(--pay-btn-text-active);
+  cursor: pointer;
+}
+.input-group {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--border-color);
+  padding: 14px 0;
+  transition: border-bottom-color 0.3s;
+}
+.input-label {
+  color: var(--text-primary);
+  font-size: 15px;
+  font-weight: 600;
+  min-width: 35px;
+}
+.input-field {
+  font-family:
+    "CashMarket",
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-size: 16px;
+  padding: 7px 0;
+  outline: none;
+}
+.input-field::placeholder {
+  color: var(--text-placeholder);
+}
+
+.note-icon {
+  width: 30px;
+  height: 30px;
+  background-color: var(--note-icon-bg);
+  border-radius: 50%;
+  transition: background-color 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-primary);
+}
+.note-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.payment-method {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  cursor: pointer;
+}
+.payment-left {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+}
+.cash-app-icon {
+  padding-left: 0px;
+}
+.cash-app-icon img {
+  gap: 0;
+  width: 25px;
+  height: 25px;
+}
+.balance-info {
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 500;
+  padding-left: 0.3rem;
+}
+.chevron {
+  color: var(--text-placeholder);
+  font-size: 16px;
+  padding-right: 10px;
+  font-weight: 300;
+}
+.suggested-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin-top: 15px;
+  margin-bottom: 15px;
+}
+.scrollable-content {
+  flex-grow: 1;
+  overflow-y: auto;
+  padding: 0 16px;
+}
+.contact-item {
+  display: flex;
+  align-items: center;
+  padding: 15px 3px;
+  cursor: pointer;
+}
+.contact-details {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-grow: 1;
+}
+.avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background-size: cover;
+  background-position: center;
+  background-color: #e5e5ea;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 20px;
+  font-weight: 500;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.contact-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.contact-name {
+  font-size: 16px;
+  font-weight: 600;
+}
+.contact-handle {
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 400;
+}
+.checkbox {
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--checkbox-border);
+  border-radius: 30%;
+  display: grid;
+  place-items: center;
+  margin-right: 15px;
+  transition: all 0.2s ease;
+}
+.contact-item.selected .checkbox {
+  background-color: var(--accent-green);
+  border-color: var(--accent-green);
+}
+.checkbox i {
+  color: white;
+  font-size: 14px;
+  transform: scale(0);
+  transition: transform 0.2s ease;
+}
+.contact-item.selected .checkbox i {
+  transform: scale(1);
+}
+.payment-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: none;
+  align-items: flex-end;
+  z-index: 1000;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.payment-overlay.active {
+  display: flex;
+  opacity: 1;
+}
+.payment-modal {
+  background: var(--page-bg-secondary);
+  border-radius: 20px 20px 0 0;
+  width: 100%;
+  padding: 8px 16px 24px 16px;
+  transform: translateY(100%);
+  transition:
+    transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1),
+    background-color 0.3s;
+}
+.payment-overlay.active .payment-modal {
+  transform: translateY(0);
+}
+.modal-handle {
+  width: 40px;
+  height: 5px;
+  background: var(--modal-handle-bg);
+  border-radius: 2.5px;
+  margin: 0 auto 16px;
+}
+.payment-modal-header {
+  text-align: center;
+  margin-bottom: 12px;
+}
+.payment-modal-title {
+  color: var(--text-primary);
+  font-size: 16px;
+  font-weight: 600;
+}
+.payment-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--modal-border);
+  cursor: pointer;
+}
+.payment-option:last-of-type {
+  border-bottom: none;
+}
+.payment-option-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.payment-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.payment-icon.cash {
+  background-color: #ffffff;
+  border: 1px solid #e5e5ea;
+}
+.payment-icon.cash img,
+.payment-icon.visa img {
+  width: 30px;
+  height: 30px;
+}
+.payment-icon.visa {
+  background-color: #ffffff;
+  border: 1px solid #e5e5ea;
+}
+.payment-option-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.payment-option-title {
+  color: var(--text-primary);
+  font-size: 16px;
+  font-weight: 400;
+}
+.payment-option-subtitle {
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+.radio-button {
+  width: 22px;
+  height: 22px;
+  border: 2px solid var(--text-placeholder);
+  border-radius: 50%;
+  position: relative;
+}
+.radio-button.selected {
+  border-color: var(--accent-green);
+  background: var(--accent-green);
+}
+.radio-button.selected::after {
+  content: "✓";
+  color: #fff;
+  font-size: 14px;
+  font-weight: bold;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+.continue-btn {
+  background: var(--page-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--modal-handle-bg);
+  padding: 16px;
+  border-radius: 30px;
+  font-size: 18px;
+  font-weight: 600;
+  width: 100%;
+  cursor: pointer;
+  margin-top: 24px;
+  transition: background-color 0.2s;
+}
+.continue-btn:active {
+  background-color: #e5e5ea; /* Keeping this simple for now */
+}
+.edit-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: var(--page-bg);
+  z-index: 4000;
+  transform: translateX(100%);
+  transition:
+    transform 0.35s ease-in-out,
+    background-color 0.3s;
+}
+.edit-overlay.show {
+  transform: translateX(0);
+}
+.edit-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  border-bottom: 1px solid var(--modal-border);
+}
+.edit-close-btn,
+.edit-done-btn {
+  font-size: 17px;
+  font-weight: 600;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  color: var(--text-primary);
+}
+.edit-done-btn {
+  color: var(--accent-green);
+}
+.edit-done-btn:disabled {
+  color: var(--text-secondary);
+}
+.edit-content {
+  padding: 32px 16px;
+}
+.edit-avatar {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background-size: cover;
+  background-position: center;
+  background-color: #e9ecef;
+  display: block;
+  margin: 0 auto 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+  color: white;
+}
+#edit-pic-input {
+  display: none;
+}
+.edit-content .input-group {
+  margin-bottom: 24px;
+  border-bottom: none;
+  padding: 0;
+}
+.edit-content .input-group label {
+  display: block;
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+.edit-content .input-group input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--border-color);
+  background-color: transparent;
+  color: var(--text-primary);
+  border-radius: 8px;
+  font-size: 16px;
+  font-family: inherit;
+}
+.color-palette {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 24px;
+}
+.color-swatch {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid transparent;
+  display: grid;
+  place-items: center;
+  color: white;
+  transition: border-color 0.2s;
+}
+.color-swatch.active {
+  border-color: var(--text-primary);
+}
+.color-swatch i {
+  transform: scale(0);
+  transition: transform 0.2s ease;
+}
+.color-swatch.active i {
+  transform: scale(1);
+}
+.alert-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.4);
+  display: none;
+  justify-content: center;
+  align-items: flex-end;
+  z-index: 5000;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.alert-modal-overlay.show {
+  display: flex;
+  opacity: 1;
+}
+.alert-modal-content {
+  background-color: var(--page-bg-secondary);
+  width: 100%;
+  max-width: 420px;
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+  padding: 12px 18px 30px;
+  display: flex;
+  flex-direction: column;
+  transform: translateY(100%);
+  transition:
+    transform 0.3s ease,
+    background-color 0.3s;
+}
+.alert-modal-overlay.show .alert-modal-content {
+  transform: translateY(0);
+}
+#alert-message {
+  font-size: 16px;
+  color: var(--text-primary);
+  margin: 20px 0;
+  font-weight: 500;
+  text-align: center;
+}
+.modal-action-btn {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  background-color: var(--accent-green);
+  color: white;
+  font-size: 18px;
+  font-weight: 600;
+  border-radius: 28px;
+  cursor: pointer;
+  margin-top: auto;
+}
+#loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: var(--card-bg-color);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  transition: background-color 0.3s;
+}
+#lottie-container {
+  width: 60px;
+  height: 60px;
+}
+#lottie-container > * {
+  transform: scale(0.28);
+}
