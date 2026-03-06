@@ -579,6 +579,20 @@
           updatePayButtonState();
         }
 
+        const filterContactsOnInput = () => {
+          const query = toInput.value.toLowerCase();
+          document
+            .querySelectorAll("#contactList .contact-item")
+            .forEach((item) => {
+              const name = item.dataset.name;
+              const cashtag = item.dataset.cashtag;
+              item.style.display =
+                name.includes(query) || cashtag.includes(query)
+                  ? "flex"
+                  : "none";
+            });
+        };
+
         function updatePayButtonState() {
           const isRecipientValid =
             selectedContact || toInput.value.trim().length > 0;
@@ -733,6 +747,10 @@
           const rawValue = toInput.value;
           const query = rawValue.trim();
 
+          // Check Settings Toggle (defaults to true if setting is not explicitly 'false')
+          const isTikTokSearchOn =
+            localStorage.getItem("tiktokSearchEnabled") !== "false";
+
           // Reset selections when typing
           if (selectedContact) {
             document
@@ -744,20 +762,35 @@
 
           updatePayButtonState();
 
-          // Hide/Show logic based on input
-          if (query.length > 0) {
-            suggestedTitleEl.style.display = "none";
-            contactListEl.style.display = "none"; // Hide default contacts while searching
-            const cleanedUsername = query.replace(/^[@$]+/, ""); // Remove @ or $ for the search query sent to the API
-            handleTikTokSearch(cleanedUsername);
+          if (isTikTokSearchOn) {
+            // Hide/Show logic based on input for TIKTOK SEARCH
+            if (query.length > 0) {
+              suggestedTitleEl.style.display = "none";
+              contactListEl.style.display = "none"; // Hide default contacts while searching
+              const cleanedUsername = query.replace(/^[@$]+/, ""); // Remove @ or $ for the search query sent to the API
+              handleTikTokSearch(cleanedUsername);
+            } else {
+              suggestedTitleEl.style.display = "block";
+              contactListEl.style.display = "block"; // Show default contacts again
+              rechargeContainerDiv.style.display = "none";
+              noMatchesView.classList.add("hidden");
+              clearTimeout(debounceTimeout);
+              if (fetchController) fetchController.abort();
+              inlineLoadingAnimation.stop();
+              filterContactsOnInput(); // Reset filter visibility for local contacts
+            }
           } else {
-            suggestedTitleEl.style.display = "block";
-            contactListEl.style.display = "block"; // Show default contacts again
+            // ORIGINAL LOCAL-ONLY SEARCH LOGIC
             rechargeContainerDiv.style.display = "none";
             noMatchesView.classList.add("hidden");
+            suggestedTitleEl.style.display = "block";
+            contactListEl.style.display = "block";
+
             clearTimeout(debounceTimeout);
             if (fetchController) fetchController.abort();
             inlineLoadingAnimation.stop();
+
+            filterContactsOnInput(); // Triggers local list filtering
           }
         });
         // --- END OF TIKTOK SEARCH IMPLEMENTATION ---
