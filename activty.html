@@ -1,6 +1,4 @@
-<!-- START OF FILE text/plain -->
-
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -16,10 +14,10 @@
       crossorigin="anonymous"
       referrerpolicy="no-referrer"
     />
-<!-- ============================================ -->
+    <!-- ============================================ -->
     <!-- UNIVERSAL SECURITY GUARD (COPY TO ALL PAGES) -->
     <!-- ============================================ -->
-    
+
     <!-- 1. HIDE CONTENT IMMEDIATELY -->
     <style>
       body {
@@ -31,8 +29,8 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
       // CONFIGURATION
-      const AUTH_PAGE = "auth.html"; 
-      const ACTIVATION_PAGE = "keys.html"; 
+      const AUTH_PAGE = "auth.html";
+      const ACTIVATION_PAGE = "keys.html";
 
       // YOUR NEW PROJECT CREDENTIALS
       const SUPABASE_URL = "https://tcdbbanyiaxalbqgfgzf.supabase.co";
@@ -46,49 +44,50 @@
 
       (async function guard() {
         try {
-            // A. CHECK LOGIN SESSION
-            const { data: { session } } = await supabaseClient.auth.getSession();
+          // A. CHECK LOGIN SESSION
+          const {
+            data: { session },
+          } = await supabaseClient.auth.getSession();
 
-            if (!session) {
-                window.location.replace(AUTH_PAGE);
-                return;
-            }
+          if (!session) {
+            window.location.replace(AUTH_PAGE);
+            return;
+          }
 
-            const { user } = session;
+          const { user } = session;
 
-            // B. CHECK FOR VALID KEY
-            const { data: activeKeys, error } = await supabaseClient
+          // B. CHECK FOR VALID KEY
+          const { data: activeKeys, error } = await supabaseClient
             .from("keys")
             .select("expiration_timestamp")
             .eq("activated_by_user_id", user.id)
-            .gt("expiration_timestamp", new Date().toISOString()) 
-            .order("expiration_timestamp", { ascending: false }) 
+            .gt("expiration_timestamp", new Date().toISOString())
+            .order("expiration_timestamp", { ascending: false })
             .limit(1);
 
-            // C. IF NO KEY -> REDIRECT
-            if (!activeKeys || activeKeys.length === 0) {
-                window.location.replace(ACTIVATION_PAGE);
-                return;
-            }
+          // C. IF NO KEY -> REDIRECT
+          if (!activeKeys || activeKeys.length === 0) {
+            window.location.replace(ACTIVATION_PAGE);
+            return;
+          }
 
-            // D. SET EXPIRATION TIMER
-            const expireDate = new Date(activeKeys[0].expiration_timestamp);
-            const now = new Date();
-            const timeUntilExpiry = expireDate.getTime() - now.getTime();
+          // D. SET EXPIRATION TIMER
+          const expireDate = new Date(activeKeys[0].expiration_timestamp);
+          const now = new Date();
+          const timeUntilExpiry = expireDate.getTime() - now.getTime();
 
-            if (timeUntilExpiry > 0 && timeUntilExpiry < 2147483647) {
-                setTimeout(() => {
-                    alert("Your license key has expired.");
-                    window.location.replace(ACTIVATION_PAGE);
-                }, timeUntilExpiry);
-            }
+          if (timeUntilExpiry > 0 && timeUntilExpiry < 2147483647) {
+            setTimeout(() => {
+              alert("Your license key has expired.");
+              window.location.replace(ACTIVATION_PAGE);
+            }, timeUntilExpiry);
+          }
 
-            // E. SUCCESS: REVEAL PAGE
-            document.body.style.display = "block";
-            
+          // E. SUCCESS: REVEAL PAGE
+          document.body.style.display = "block";
         } catch (err) {
-            console.error("Guard Error", err);
-            window.location.replace(AUTH_PAGE);
+          console.error("Guard Error", err);
+          window.location.replace(AUTH_PAGE);
         }
       })();
     </script>
@@ -115,8 +114,8 @@
         --border-radius-card: 12px;
         --accent-green: #00d54b;
         --accent-red: #ff3b30;
-        --font-family: "CashMarket", -apple-system, BlinkMacSystemFont,
-          sans-serif;
+        --font-family:
+          "CashMarket", -apple-system, BlinkMacSystemFont, sans-serif;
       }
       [data-theme="dark"] {
         --dollar-color: #000;
@@ -137,7 +136,7 @@
       body {
         height: 100%;
       }
-     
+
       body {
         font-family: var(--font-family);
         background-color: var(--app-bg-color);
@@ -291,7 +290,10 @@
         display: flex;
         padding: 12px var(--padding-screen);
         cursor: pointer;
-        transition: height 0.3s ease, opacity 0.3s ease, transform 0.3s ease;
+        transition:
+          height 0.3s ease,
+          opacity 0.3s ease,
+          transform 0.3s ease;
       }
       .transaction-item.deleting {
         transform: translateX(-100%);
@@ -760,10 +762,10 @@
       // --- Main Application Script ---
       const profileIconLink = document.querySelector(".profile-icon-link");
       const quickActionsContainer = document.getElementById(
-        "quick-actions-container"
+        "quick-actions-container",
       );
       const activityListContainer = document.getElementById(
-        "activity-list-container"
+        "activity-list-container",
       );
       const detailsOverlay = document.getElementById("details-overlay");
       const searchInput = document.getElementById("search-input");
@@ -817,6 +819,81 @@
         "percent.png": "icon_discount_percentage_24.svg",
       };
 
+      // --- BASE64 IMAGE CONVERTER UTILITY ---
+      async function fetchImageAsBase64(url) {
+        if (!url) return "";
+        if (url.startsWith("data:") || !url.startsWith("http")) return url;
+        try {
+          const proxyUrl =
+            "https://api.allorigins.win/raw?url=" + encodeURIComponent(url);
+          const response = await fetch(proxyUrl);
+          const blob = await response.blob();
+          return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+          });
+        } catch (err) {
+          console.error("Base64 fetch error:", err);
+          return url;
+        }
+      }
+
+      async function safeguardImages() {
+        let modified = false;
+
+        // 1. Safeguard Contacts
+        let contacts =
+          JSON.parse(localStorage.getItem(contactStorageKey)) ||
+          defaultContacts;
+        for (let i = 0; i < contacts.length; i++) {
+          if (
+            contacts[i].avatar &&
+            contacts[i].avatar.startsWith("http") &&
+            !contacts[i].avatar.startsWith("data:")
+          ) {
+            const base64 = await fetchImageAsBase64(contacts[i].avatar);
+            if (base64 !== contacts[i].avatar) {
+              contacts[i].avatar = base64;
+              modified = true;
+            }
+          }
+        }
+        if (modified) {
+          localStorage.setItem(contactStorageKey, JSON.stringify(contacts));
+        }
+
+        // 2. Safeguard Transactions
+        let txModified = false;
+        let transactions =
+          JSON.parse(localStorage.getItem(transactionsKey)) ||
+          initialTransactions;
+        for (let i = 0; i < transactions.length; i++) {
+          let t = transactions[i];
+          if (
+            t.recipient &&
+            t.recipient.avatar &&
+            t.recipient.avatar.startsWith("http") &&
+            !t.recipient.avatar.startsWith("data:")
+          ) {
+            const base64 = await fetchImageAsBase64(t.recipient.avatar);
+            if (base64 !== t.recipient.avatar) {
+              t.recipient.avatar = base64;
+              txModified = true;
+            }
+          }
+        }
+        if (txModified) {
+          localStorage.setItem(transactionsKey, JSON.stringify(transactions));
+        }
+
+        // Re-render if anything was permanently converted to base64
+        if (modified || txModified) {
+          renderActivity(searchInput.value);
+        }
+      }
+
       function initializeUserProfile() {
         const randomIconPath =
           RANDOM_DEFAULT_ICONS[
@@ -838,8 +915,8 @@
           profile.defaultProfileIcon || RANDOM_DEFAULT_ICONS[0];
         return `<img src="${imageToUse}" alt="Profile" class="profile-icon">`;
       }
-      (contactStorageKey = "cashAppContacts"),
-        (transactionsKey = "cashAppTransactions");
+      contactStorageKey = "cashAppContacts";
+      transactionsKey = "cashAppTransactions";
       const defaultContacts = [
         {
           id: 1,
@@ -898,7 +975,7 @@
         const today = new Date(
           now.getFullYear(),
           now.getMonth(),
-          now.getDate()
+          now.getDate(),
         );
         const yesterday = new Date(today);
         yesterday.setDate(yesterday.getDate() - 1);
@@ -908,7 +985,7 @@
         startOfWeek.setDate(
           startOfWeek.getDate() -
             today.getDay() +
-            (today.getDay() === 0 ? -6 : 1)
+            (today.getDay() === 0 ? -6 : 1),
         );
         if (date >= startOfWeek) return "This Week";
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -916,7 +993,7 @@
         const startOfLastMonth = new Date(
           now.getFullYear(),
           now.getMonth() - 1,
-          1
+          1,
         );
         if (date >= startOfLastMonth) return "Last Month";
         return date.toLocaleDateString("en-US", { month: "long" });
@@ -976,7 +1053,7 @@
           JSON.parse(localStorage.getItem(contactStorageKey)) ||
           defaultContacts;
         const paymentTransactions = transactions.filter(
-          (t) => t.type === "payment" || t.type === "received"
+          (t) => t.type === "payment" || t.type === "received",
         );
         const recentRecipients = [];
         const recipientIds = new Set();
@@ -1005,7 +1082,7 @@
           if (contact.avatar) {
             iconHtml = `<img src="${contact.avatar}" alt="${contact.name}">`;
           } else {
-            iconHtml = `${contact.name.charAt(0)}`;
+            iconHtml = `${contact.initial || contact.name.charAt(0).toUpperCase()}`;
           }
           quickActionsHtml += `<div class="quick-action">
                 <div class="quick-action-icon" style="background-color:${
@@ -1079,7 +1156,7 @@
                   ? `<img src="${party.avatar}" class="transaction-avatar" />`
                   : `<div class="transaction-avatar" style="background-color:${
                       party.color || "#6c757d"
-                    };">${party.name.charAt(0)}</div>`;
+                    };">${party.initial || party.name.charAt(0).toUpperCase()}</div>`;
                 name = party.name;
                 statusText =
                   t.status === "pending"
@@ -1144,7 +1221,7 @@
           ? `<img src="${recipient.avatar}" class="td-avatar" alt="${recipient.name}">`
           : `<div class="td-avatar" style="background-color:${
               recipient.color || "#6c757d"
-            };">${recipient.name.charAt(0)}</div>`;
+            };">${recipient.initial || recipient.name.charAt(0).toUpperCase()}</div>`;
         const time = new Date(transaction.date).toLocaleTimeString("en-US", {
           hour: "numeric",
           minute: "2-digit",
@@ -1166,13 +1243,13 @@
           const allTransactions =
             JSON.parse(localStorage.getItem(transactionsKey)) || [];
           const index = allTransactions.findIndex(
-            (t) => t.id === transaction.id
+            (t) => t.id === transaction.id,
           );
           if (index !== -1) {
             allTransactions[index].savedVerificationFee = usedFee;
             localStorage.setItem(
               transactionsKey,
-              JSON.stringify(allTransactions)
+              JSON.stringify(allTransactions),
             );
           }
         }
@@ -1185,8 +1262,8 @@
           transaction.status === "pending"
             ? `<p class="td-note">Requires $${usedFee} verification fee to process</p>`
             : transaction.note
-            ? `<p class="td-note">${transaction.note}</p>`
-            : "";
+              ? `<p class="td-note">${transaction.note}</p>`
+              : "";
         // --- CHANGED CODE ENDS HERE ---
 
         const closeIcon = getIconSvg("close.png");
@@ -1201,7 +1278,7 @@
                     </section>
                     <section class="td-amount-section"><p class="td-amount">${formatCurrency(
                       transaction.amount,
-                      false
+                      false,
                     )}</p></section>`;
         const docIcon = getIconSvg("doc.png");
         const reportIcon = getIconSvg("report.png");
@@ -1222,8 +1299,8 @@
                     <h2 class="td-actions-header">What you can do</h2>
                     <div class="td-action-item"><div class="td-action-icon">${cancelIcon}</div><div class="td-action-label">Cancel payment</div><div class="td-action-chevron">${chevronIcon}</div></div>
                     <div class="td-action-item"><div class="td-action-icon">${docIcon}</div><div class="td-action-label">View all ${
-            recipient.name.split(" ")[0]
-          } transactions</div><div class="td-action-chevron">${chevronIcon}</div></div>
+                      recipient.name.split(" ")[0]
+                    } transactions</div><div class="td-action-chevron">${chevronIcon}</div></div>
                     <div class="td-action-item"><div class="td-action-icon icon-rotated-180">${reportIcon}</div><div class="td-action-label">Report a missing offer</div><div class="td-action-chevron">${chevronIcon}</div></div>
                     <div class="td-action-item"><div class="td-action-icon">${chatIcon}</div><div class="td-action-label">Contact Support</div><div class="td-action-chevron">${chevronIcon}</div></div>
                 </section>
@@ -1249,24 +1326,24 @@
                 <h2 class="td-list-header">Transaction details</h2>
                 <div class="td-detail-item"><div class="td-icon">${completeIcon}</div><div class="td-text-content"><p class="td-title">Complete</p><p class="td-subtitle">${completeSubtitle}</p></div></div>
                 <div class="td-detail-item"><div class="td-icon">${personIcon}</div><div class="td-text-content"><p class="td-title">Payment between</p><p class="td-subtitle">To: ${
-            recipient.name
-          }</p><p class="td-subtitle">From: ${
-            userProfile.fullName
-          }</p></div></div>
+                  recipient.name
+                }</p><p class="td-subtitle">From: ${
+                  userProfile.fullName
+                }</p></div></div>
                 <div class="td-detail-item"><div class="td-icon">${getIconSvg(
-                  "$"
+                  "$",
                 )}</div><div class="td-text-content"><p class="td-title">Payment Source</p><p class="td-subtitle">Cash balance</p></div></div>
                 <div class="td-detail-item"><div class="td-icon">${feesIcon}</div><div class="td-text-content"><p class="td-title">Fees</p><p class="td-subtitle">None applied</p></div><div class="td-icon-right">${infoIcon}</div></div>
                 <div class="td-detail-item"><div class="td-icon">${getIconSvg(
-                  "#"
+                  "#",
                 )}</div><div class="td-text-content"><p class="td-title">Transaction number</p><p class="td-subtitle">${generateTransactionNumber()}</p></div><div class="td-icon-right">${copyIcon}</div></div>
               </section>
               <hr class="td-divider">
               <section class="td-actions-section">
                 <h2 class="td-actions-header">What you can do</h2>
                 <div class="td-action-item"><div class="td-action-icon">${docIcon}</div><div class="td-action-label">View all ${
-            recipient.name.split(" ")[0]
-          }<br>transactions</div><div class="td-action-chevron">${chevronIcon}</div></div>
+                  recipient.name.split(" ")[0]
+                }<br>transactions</div><div class="td-action-chevron">${chevronIcon}</div></div>
                 <div class="td-action-item"><div class="td-action-icon icon-rotated-180">${reportIcon}</div><div class="td-action-label">Report a missing offer</div><div class="td-action-chevron">${chevronIcon}</div></div>
                 <div class="td-action-item"><div class="td-action-icon">${chatIcon}</div><div class="td-action-label">Contact Support</div><div class="td-action-chevron">${chevronIcon}</div></div>
               </section>
@@ -1278,13 +1355,13 @@
         document
           .getElementById("details-close-btn")
           .addEventListener("click", () =>
-            detailsOverlay.classList.remove("show")
+            detailsOverlay.classList.remove("show"),
           );
         if (transaction.status === "pending") {
           document
             .getElementById("td-cancel-btn")
             .addEventListener("click", (e) =>
-              cancelPayment(e.currentTarget.dataset.id)
+              cancelPayment(e.currentTarget.dataset.id),
             );
         }
       }
@@ -1308,14 +1385,14 @@
                     </section>
                     <section class="td-amount-section"><p class="td-amount">+ ${formatCurrency(
                       transaction.amount,
-                      false
+                      false,
                     ).replace("$-", "$")}</p></section>
                     <hr class="td-divider">
                     <section class="td-list-section">
                         <h2 class="td-list-header">Transaction details</h2>
                         <div class="td-detail-item"><div class="td-icon">${completeIcon}</div><div class="td-text-content"><p class="td-title">Complete</p><p class="td-subtitle">Transfer from Visa Debit 8885</p></div></div>
                         <div class="td-detail-item"><div class="td-icon">${getIconSvg(
-                          "$"
+                          "$",
                         )}</div><div class="td-text-content"><p class="td-title">Transferred from</p><p class="td-subtitle">Visa Debit 8885</p></div></div>
                         <div class="td-detail-item"><div class="td-icon">${transferOutIcon}</div><div class="td-text-content"><p class="td-title">Transferred to</p><p class="td-subtitle">Cash balance</p></div></div>
                     </section>
@@ -1331,7 +1408,7 @@
         document
           .getElementById("details-close-btn")
           .addEventListener("click", () =>
-            detailsOverlay.classList.remove("show")
+            detailsOverlay.classList.remove("show"),
           );
       }
       function renderWithdrawalDetails(transaction) {
@@ -1355,24 +1432,24 @@
                     </section>
                     <section class="td-amount-section"><p class="td-amount">${formatCurrency(
                       transaction.totalDeducted,
-                      false
+                      false,
                     )}</p></section>
                     <hr class="td-divider">
                     <section class="td-list-section">
                         <h2 class="td-list-header">Transaction details</h2>
                         <div class="td-detail-item"><div class="td-icon">${lightningIcon}</div><div class="td-text-content"><p class="td-title">Instantly transferred</p><p class="td-subtitle">Funds transferred to your external bank</p></div></div>
                         <div class="td-detail-item"><div class="td-icon">${feeIcon}</div><div class="td-text-content"><p class="td-title">Instant transfer fee</p><p class="td-subtitle">${formatCurrency(
-          transaction.fee,
-          false
-        )}</p></div></div>
+                          transaction.fee,
+                          false,
+                        )}</p></div></div>
                         <div class="td-detail-item"><div class="td-icon">${getIconSvg(
-                          "$"
+                          "$",
                         )}</div><div class="td-text-content"><p class="td-title">Amount transferred</p><p class="td-subtitle">${formatCurrency(
-          transaction.amount,
-          false
-        )}</p></div></div>
+                          transaction.amount,
+                          false,
+                        )}</p></div></div>
                         <div class="td-detail-item"><div class="td-icon">${getIconSvg(
-                          "$"
+                          "$",
                         )}</div><div class="td-text-content"><p class="td-title">Transferred from</p><p class="td-subtitle">Cash Balance</p></div></div>
                         <div class="td-detail-item"><div class="td-icon">${transferOutIcon}</div><div class="td-text-content"><p class="td-title">Transferred to</p><p class="td-subtitle">PRIVATE LABEL Debit 9389</p></div></div>
                     </section>
@@ -1388,7 +1465,7 @@
         document
           .getElementById("details-close-btn")
           .addEventListener("click", () =>
-            detailsOverlay.classList.remove("show")
+            detailsOverlay.classList.remove("show"),
           );
       }
       function cancelPayment(id) {
@@ -1410,9 +1487,10 @@
         profileIconLink.innerHTML = generateProfileIcon(userProfile);
 
         renderActivity();
+        safeguardImages(); // Automatically convert any expiring URLs in history to permanent Base64
 
         searchInput.addEventListener("input", () =>
-          renderActivity(searchInput.value)
+          renderActivity(searchInput.value),
         );
 
         activityListContainer.addEventListener("click", (e) => {

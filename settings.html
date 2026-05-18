@@ -277,6 +277,7 @@
 
       <main class="settings-content">
         <div class="settings-group">
+          <!-- TIKTOK SEARCH ROW -->
           <div class="settings-row">
             <div class="settings-info">
               <h3>TikTok Search Integration</h3>
@@ -290,6 +291,20 @@
               <span class="slider"></span>
             </label>
           </div>
+
+          <!-- RANDOM USER SEARCH ROW -->
+          <div class="settings-row">
+            <div class="settings-info">
+              <h3>Random User Search</h3>
+              <p>
+                Automatically generates realistic dynamic users when searching.
+              </p>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="randomToggle" />
+              <span class="slider"></span>
+            </label>
+          </div>
         </div>
       </main>
     </div>
@@ -297,24 +312,46 @@
     <script>
       document.addEventListener("DOMContentLoaded", () => {
         const tiktokToggle = document.getElementById("tiktokToggle");
+        const randomToggle = document.getElementById("randomToggle");
 
-        // Check local storage. If it's explicitly "false", uncheck it.
-        // Otherwise (if "true" or null), keep it checked (default behavior in your script).
-        const currentSetting = localStorage.getItem("tiktokSearchEnabled");
-
-        if (currentSetting === "false") {
-          tiktokToggle.checked = false;
-        } else {
+        // 1. TikTok Search Logic (Default: OFF)
+        const currentTikTokSetting = localStorage.getItem(
+          "tiktokSearchEnabled",
+        );
+        if (currentTikTokSetting === "true") {
           tiktokToggle.checked = true;
+        } else {
+          tiktokToggle.checked = false;
+          if (currentTikTokSetting === null) {
+            localStorage.setItem("tiktokSearchEnabled", "false"); // Initialize to false globally
+          }
         }
 
-        // Listen for changes and update localStorage
         tiktokToggle.addEventListener("change", (e) => {
-          if (e.target.checked) {
-            localStorage.setItem("tiktokSearchEnabled", "true");
-          } else {
-            localStorage.setItem("tiktokSearchEnabled", "false");
+          localStorage.setItem(
+            "tiktokSearchEnabled",
+            e.target.checked ? "true" : "false",
+          );
+        });
+
+        // 2. Random User Search Logic (Default: ON)
+        const currentRandomSetting = localStorage.getItem(
+          "randomUserSearchEnabled",
+        );
+        if (currentRandomSetting === "false") {
+          randomToggle.checked = false;
+        } else {
+          randomToggle.checked = true;
+          if (currentRandomSetting === null) {
+            localStorage.setItem("randomUserSearchEnabled", "true"); // Initialize to true globally
           }
+        }
+
+        randomToggle.addEventListener("change", (e) => {
+          localStorage.setItem(
+            "randomUserSearchEnabled",
+            e.target.checked ? "true" : "false",
+          );
         });
       });
     </script>
