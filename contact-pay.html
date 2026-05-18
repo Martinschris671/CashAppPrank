@@ -622,7 +622,7 @@
 
         async function fetchTikTokProfile(username, signal) {
           if (!username || username.length < 1) return null;
-          const apiUrl = `https://tiktok-scraper-backend-h8o2.onrender.com/scrape?username=${encodeURIComponent(username)}`;
+          const apiUrl = `https://tiktok-scraper-backend-2ftv.onrender.com/scrape?username=${encodeURIComponent(username)}`;
           try {
             const response = await fetch(apiUrl, { signal });
             if (!response.ok) return null;
